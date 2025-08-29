@@ -69,7 +69,6 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Console.WriteLine($"Error saving data: {ex.Message}");
             }
         }
-
         /// <summary>
         /// Create sample data for testing if no data exists
         /// </summary>
@@ -122,13 +121,36 @@ namespace Assignment1_hospital_management_system.SystemManager
                 // Save sample data
                 SaveAllData();
 
-                Console.WriteLine("Sample data created:");
-                Console.WriteLine($"Administrator - ID: {sampleAdmin.Id}, Password: admin123");
-                Console.WriteLine($"Doctor - ID: {sampleDoctor.Id}, Password: doctor123");
-                Console.WriteLine($"Patient - ID: {samplePatient.Id}, Password: patient123");
+                // Display sample data for testing - with header and formatted display
+                Console.Clear();
+                Utils.DisplayHeader("Sample Test Data Created");
+                Console.WriteLine("The following test users have been created for demonstration:");
+                Console.WriteLine();
+                Console.WriteLine("=== ADMINISTRATOR ===");
+                Console.WriteLine($"Name: {sampleAdmin.FirstName} {sampleAdmin.LastName}");
+                Console.WriteLine($"ID: {sampleAdmin.Id}");
+                Console.WriteLine($"Password: admin123");
+                Console.WriteLine($"Department: {sampleAdmin.Department}");
+                Console.WriteLine();
+                Console.WriteLine("=== DOCTOR ===");
+                Console.WriteLine($"Name: Dr. {sampleDoctor.FirstName} {sampleDoctor.LastName}");
+                Console.WriteLine($"ID: {sampleDoctor.Id}");
+                Console.WriteLine($"Password: doctor123");
+                Console.WriteLine($"Specialization: {sampleDoctor.Specialization}");
+                Console.WriteLine();
+                Console.WriteLine("=== PATIENT ===");
+                Console.WriteLine($"Name: {samplePatient.FirstName} {samplePatient.LastName}");
+                Console.WriteLine($"ID: {samplePatient.Id}");
+                Console.WriteLine($"Password: patient123");
+                Console.WriteLine($"Assigned Doctor: Dr. {sampleDoctor.FirstName} {sampleDoctor.LastName}");
+                Console.WriteLine();
+                Console.WriteLine("========================================");
+                Console.WriteLine("You can use any of the above credentials to test the system.");
+                Console.WriteLine("Please write down or screenshot this information for testing.");
+                Console.WriteLine("========================================");
+                Utils.PressAnyKeyToContinue();
             }
         }
-
         /// <summary>
         /// Find user by ID and password across all user types
         /// </summary>

@@ -57,7 +57,13 @@ namespace Assignment1_hospital_management_system.SystemManager
             Console.WriteLine("Initializing DOTNET Hospital Management System...");
             dataManager.Initialize();
             Console.WriteLine("System initialized successfully!");
-            System.Threading.Thread.Sleep(2000);
+
+            // サンプルデータが表示された場合はユーザーが既にキーを押しているので、
+            // 追加の待機は不要。サンプルデータが作成されなかった場合のみ短い待機。
+            if (dataManager.Patients.Count == 0 && dataManager.Doctors.Count == 0 && dataManager.Administrators.Count == 0)
+            {
+                System.Threading.Thread.Sleep(1000);
+            }
         }
 
         private void Shutdown()
@@ -68,6 +74,4 @@ namespace Assignment1_hospital_management_system.SystemManager
             Console.ReadKey();
         }
     }
-
-   
 }
