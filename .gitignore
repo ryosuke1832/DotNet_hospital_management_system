@@ -9,7 +9,6 @@
 *.user
 *.userosscache
 *.sln.docstates
-*.txt
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
@@ -362,3 +361,11 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+# Hospital Management System Data Files
+# Keep the Data folder but ignore the actual data files for privacy
+# Remove the line below if you want to track the data files in git
+Data/*.txt
+
+# But keep the Data folder structure
+!Data/.gitkeep

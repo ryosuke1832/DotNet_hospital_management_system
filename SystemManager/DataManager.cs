@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace Assignment1_hospital_management_system.SystemManager
 {
     /// <summary>
-    /// Manages all data operations and storage
+    /// Manages all data operations and storage with improved file handling
     /// </summary>
     public class DataManager
     {
@@ -18,6 +18,9 @@ namespace Assignment1_hospital_management_system.SystemManager
         public List<Administrator> Administrators { get; private set; }
         public List<Appointment> Appointments { get; private set; }
 
+        /// <summary>
+        /// Constructor - initializes empty collections
+        /// </summary>
         public DataManager()
         {
             Patients = new List<Patient>();
@@ -31,74 +34,78 @@ namespace Assignment1_hospital_management_system.SystemManager
         /// </summary>
         public void Initialize()
         {
-            try
-            {
-                Console.WriteLine("システム初期化中...");
-                FileManager.InitializeDataFiles();
+            Console.WriteLine("=== Initializing Data Manager ===");
 
-                Console.WriteLine("データファイルからデータを読み込み中...");
-                LoadAllData();
+            // Initialize file system
+            FileManager.InitializeDataFiles();
 
-                Console.WriteLine($"読み込み完了: 患者{Patients.Count}名, 医師{Doctors.Count}名, 管理者{Administrators.Count}名, 予約{Appointments.Count}件");
+            // Display file information for debugging
+            FileManager.DisplayFileInformation();
 
-                // Always try to create sample data for debugging purposes
-                ForceCreateSampleData();
+            // Load existing data
+            LoadAllData();
 
-                Console.WriteLine("システム初期化完了！");
-                System.Threading.Thread.Sleep(1000);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"初期化エラー: {ex.Message}");
-                Console.WriteLine("サンプルデータを強制作成します...");
-                ForceCreateSampleData();
-            }
+            // Create sample data if needed
+            CreateSampleDataIfNeeded();
+
+            Console.WriteLine("=== Data Manager initialized successfully ===");
         }
 
         /// <summary>
-        /// Load all data from files
+        /// Load all data from files with comprehensive logging
         /// </summary>
         public void LoadAllData()
         {
             try
             {
-                Patients = FileManager.LoadPatients() ?? new List<Patient>();
-                Doctors = FileManager.LoadDoctors() ?? new List<Doctor>();
-                Administrators = FileManager.LoadAdministrators() ?? new List<Administrator>();
-                Appointments = FileManager.LoadAppointments() ?? new List<Appointment>();
+                Console.WriteLine("Loading data from files...");
 
-                Console.WriteLine($"データ読み込み完了: 患者{Patients.Count}名, 医師{Doctors.Count}名, 管理者{Administrators.Count}名, 予約{Appointments.Count}件");
+                Patients = FileManager.LoadPatients();
+                Doctors = FileManager.LoadDoctors();
+                Administrators = FileManager.LoadAdministrators();
+                Appointments = FileManager.LoadAppointments();
+
+                Console.WriteLine($"Data loading summary:");
+                Console.WriteLine($"- Patients: {Patients.Count}");
+                Console.WriteLine($"- Doctors: {Doctors.Count}");
+                Console.WriteLine($"- Administrators: {Administrators.Count}");
+                Console.WriteLine($"- Appointments: {Appointments.Count}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"データ読み込みエラー: {ex.Message}");
-                // Initialize empty lists if loading fails
-                Patients = new List<Patient>();
-                Doctors = new List<Doctor>();
-                Administrators = new List<Administrator>();
-                Appointments = new List<Appointment>();
+                Console.WriteLine($"Error loading data: {ex.Message}");
             }
         }
 
         /// <summary>
-        /// Force create sample data for testing (always creates new data)
+        /// Save all data to files with comprehensive logging
         /// </summary>
-        private void ForceCreateSampleData()
+        public void SaveAllData()
         {
-            Console.WriteLine("テスト用サンプルデータを作成します...");
-
-            // Clear existing data for fresh start
-            Patients.Clear();
-            Doctors.Clear();
-            Administrators.Clear();
-            Appointments.Clear();
-
             try
             {
-                // Create sample administrator with fixed ID for testing
+                Console.WriteLine("Saving all data to files...");
+                FileManager.SaveAllData(Patients, Doctors, Administrators, Appointments);
+                Console.WriteLine("Data save operation completed.");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving data: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Create sample data for testing if no data exists
+        /// </summary>
+        private void CreateSampleDataIfNeeded()
+        {
+            if (Patients.Count == 0 && Doctors.Count == 0 && Administrators.Count == 0)
+            {
+                Console.WriteLine("No existing data found. Creating sample data for testing...");
+
+                // Create sample administrator
                 Administrator sampleAdmin = new Administrator("David", "Adminson")
                 {
-                    Id = 99999, // Fixed ID for easy testing
                     Email = "admin@hospital.com",
                     Phone = "0412345678",
                     Address = "123 Admin Street, Sydney, NSW",
@@ -106,24 +113,20 @@ namespace Assignment1_hospital_management_system.SystemManager
                     Department = "Administration"
                 };
                 Administrators.Add(sampleAdmin);
-                Console.WriteLine($"管理者を作成しました - ID: {sampleAdmin.Id}");
 
-                // Create sample doctor with fixed ID for testing
+                // Create sample doctor
                 Doctor sampleDoctor = new Doctor("Jack", "Doctorson", "General Practice")
                 {
-                    Id = 88888, // Fixed ID for easy testing
                     Email = "jack@hospital.com",
                     Phone = "0412333676",
                     Address = "23 Real Street, Sydney, NSW",
                     Password = "doctor123"
                 };
                 Doctors.Add(sampleDoctor);
-                Console.WriteLine($"医師を作成しました - ID: {sampleDoctor.Id}");
 
-                // Create sample patient with fixed ID for testing
+                // Create sample patient
                 Patient samplePatient = new Patient("David", "Patientson")
                 {
-                    Id = 77777, // Fixed ID for easy testing
                     Email = "davey67@gmail.com",
                     Phone = "0412456876",
                     Address = "19 Real Street, Sydney, NSW",
@@ -132,7 +135,6 @@ namespace Assignment1_hospital_management_system.SystemManager
                     AssignedDoctorId = sampleDoctor.Id
                 };
                 Patients.Add(samplePatient);
-                Console.WriteLine($"患者を作成しました - ID: {samplePatient.Id}");
 
                 // Assign patient to doctor
                 sampleDoctor.AddPatient(samplePatient.Id);
@@ -140,78 +142,72 @@ namespace Assignment1_hospital_management_system.SystemManager
                 // Create sample appointment
                 Appointment sampleAppointment = new Appointment(sampleDoctor.Id, samplePatient.Id, "Regular checkup with doctor");
                 Appointments.Add(sampleAppointment);
-                Console.WriteLine($"予約を作成しました - ID: {sampleAppointment.AppointmentId}");
 
-                // Save sample data
-                Console.WriteLine("サンプルデータをファイルに保存中...");
+                // Save sample data immediately
+                Console.WriteLine("Saving sample data to files...");
                 SaveAllData();
 
-                // Display created data
-                Console.Clear();
-                Utils.DisplayHeader("サンプルデータ作成完了");
-                Console.WriteLine("テスト用のサンプルデータが正常に作成されました！");
-                Console.WriteLine();
-                Console.WriteLine("==========================================");
-                Console.WriteLine("           テスト用ログイン情報");
-                Console.WriteLine("==========================================");
-                Console.WriteLine();
-                Console.WriteLine("【管理者 / Administrator】");
-                Console.WriteLine($"  名前: {sampleAdmin.FirstName} {sampleAdmin.LastName}");
-                Console.WriteLine($"  ID: {sampleAdmin.Id}");
-                Console.WriteLine($"  パスワード: admin123");
-                Console.WriteLine();
-                Console.WriteLine("【医師 / Doctor】");
-                Console.WriteLine($"  名前: Dr. {sampleDoctor.FirstName} {sampleDoctor.LastName}");
-                Console.WriteLine($"  ID: {sampleDoctor.Id}");
-                Console.WriteLine($"  パスワード: doctor123");
-                Console.WriteLine();
-                Console.WriteLine("【患者 / Patient】");
-                Console.WriteLine($"  名前: {samplePatient.FirstName} {samplePatient.LastName}");
-                Console.WriteLine($"  ID: {samplePatient.Id}");
-                Console.WriteLine($"  パスワード: patient123");
-                Console.WriteLine();
-                Console.WriteLine("==========================================");
-                Console.WriteLine("上記のIDとパスワードを必ずメモしてください！");
-                Console.WriteLine("==========================================");
-                Utils.PressAnyKeyToContinue();
+                // Display sample data for testing
+                DisplaySampleDataInformation(sampleAdmin, sampleDoctor, samplePatient);
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"サンプルデータ作成エラー: {ex.Message}");
-                Console.WriteLine("手動でユーザーを作成してください。");
+                Console.WriteLine("Existing data found. Skipping sample data creation.");
             }
         }
 
         /// <summary>
-        /// Save all data to files
+        /// Display sample data information for testing purposes
         /// </summary>
-        public void SaveAllData()
+        private void DisplaySampleDataInformation(Administrator admin, Doctor doctor, Patient patient)
         {
-            try
-            {
-                FileManager.SaveAllData(Patients, Doctors, Administrators, Appointments);
-                Console.WriteLine("データ保存完了！");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"データ保存エラー: {ex.Message}");
-            }
+            Console.Clear();
+            Utils.DisplayHeader("Sample Test Data Created");
+            Console.WriteLine("The following test users have been created for demonstration:");
+            Console.WriteLine();
+
+            Console.WriteLine("=== ADMINISTRATOR ===");
+            Console.WriteLine($"Name: {admin.FirstName} {admin.LastName}");
+            Console.WriteLine($"ID: {admin.Id}");
+            Console.WriteLine($"Password: admin123");
+            Console.WriteLine($"Department: {admin.Department}");
+            Console.WriteLine();
+
+            Console.WriteLine("=== DOCTOR ===");
+            Console.WriteLine($"Name: Dr. {doctor.FirstName} {doctor.LastName}");
+            Console.WriteLine($"ID: {doctor.Id}");
+            Console.WriteLine($"Password: doctor123");
+            Console.WriteLine($"Specialization: {doctor.Specialization}");
+            Console.WriteLine();
+
+            Console.WriteLine("=== PATIENT ===");
+            Console.WriteLine($"Name: {patient.FirstName} {patient.LastName}");
+            Console.WriteLine($"ID: {patient.Id}");
+            Console.WriteLine($"Password: patient123");
+            Console.WriteLine($"Assigned Doctor: Dr. {doctor.FirstName} {doctor.LastName}");
+            Console.WriteLine();
+
+            Console.WriteLine("========================================");
+            Console.WriteLine("You can use any of the above credentials to test the system.");
+            Console.WriteLine("Please write down or screenshot this information for testing.");
+            Console.WriteLine("All data has been saved to the Data folder.");
+            Console.WriteLine("========================================");
+            Utils.PressAnyKeyToContinue();
         }
 
         /// <summary>
         /// Find user by ID and password across all user types
         /// </summary>
+        /// <param name="id">User ID</param>
+        /// <param name="password">User password</param>
+        /// <returns>User object if found, null otherwise</returns>
         public User FindUser(int id, string password)
         {
-            // Debug output
-            Console.WriteLine($"ユーザー検索中: ID={id}, パスワード={password}");
-            Console.WriteLine($"検索対象: 患者{Patients.Count}名, 医師{Doctors.Count}名, 管理者{Administrators.Count}名");
-
             // Check patients
             User user = Patients.FirstOrDefault(p => p.Id == id && p.Password == password);
             if (user != null)
             {
-                Console.WriteLine($"患者として認証成功: {user.FirstName} {user.LastName}");
+                Console.WriteLine($"Patient login successful: {user.FirstName} {user.LastName}");
                 return user;
             }
 
@@ -219,7 +215,7 @@ namespace Assignment1_hospital_management_system.SystemManager
             user = Doctors.FirstOrDefault(d => d.Id == id && d.Password == password);
             if (user != null)
             {
-                Console.WriteLine($"医師として認証成功: {user.FirstName} {user.LastName}");
+                Console.WriteLine($"Doctor login successful: Dr. {user.FirstName} {user.LastName}");
                 return user;
             }
 
@@ -227,39 +223,181 @@ namespace Assignment1_hospital_management_system.SystemManager
             user = Administrators.FirstOrDefault(a => a.Id == id && a.Password == password);
             if (user != null)
             {
-                Console.WriteLine($"管理者として認証成功: {user.FirstName} {user.LastName}");
+                Console.WriteLine($"Administrator login successful: {user.FirstName} {user.LastName}");
                 return user;
             }
 
-            Console.WriteLine("認証失敗: 該当するユーザーが見つかりません");
+            Console.WriteLine($"Login failed: No user found with ID {id} and provided password");
             return null;
         }
 
         /// <summary>
         /// Add a new patient to the system
         /// </summary>
+        /// <param name="patient">Patient to add</param>
         public void AddPatient(Patient patient)
         {
-            Patients.Add(patient);
-            SaveAllData();
+            if (patient != null)
+            {
+                Patients.Add(patient);
+                Console.WriteLine($"Patient {patient.FirstName} {patient.LastName} (ID: {patient.Id}) added to system");
+                SaveAllData();
+            }
+            else
+            {
+                Console.WriteLine("Error: Cannot add null patient");
+            }
         }
 
         /// <summary>
         /// Add a new doctor to the system
         /// </summary>
+        /// <param name="doctor">Doctor to add</param>
         public void AddDoctor(Doctor doctor)
         {
-            Doctors.Add(doctor);
-            SaveAllData();
+            if (doctor != null)
+            {
+                Doctors.Add(doctor);
+                Console.WriteLine($"Doctor {doctor.FirstName} {doctor.LastName} (ID: {doctor.Id}) added to system");
+                SaveAllData();
+            }
+            else
+            {
+                Console.WriteLine("Error: Cannot add null doctor");
+            }
+        }
+
+        /// <summary>
+        /// Add a new administrator to the system
+        /// </summary>
+        /// <param name="administrator">Administrator to add</param>
+        public void AddAdministrator(Administrator administrator)
+        {
+            if (administrator != null)
+            {
+                Administrators.Add(administrator);
+                Console.WriteLine($"Administrator {administrator.FirstName} {administrator.LastName} (ID: {administrator.Id}) added to system");
+                SaveAllData();
+            }
+            else
+            {
+                Console.WriteLine("Error: Cannot add null administrator");
+            }
         }
 
         /// <summary>
         /// Add a new appointment to the system
         /// </summary>
+        /// <param name="appointment">Appointment to add</param>
         public void AddAppointment(Appointment appointment)
         {
-            Appointments.Add(appointment);
-            SaveAllData();
+            if (appointment != null)
+            {
+                Appointments.Add(appointment);
+                Console.WriteLine($"Appointment {appointment.AppointmentId} added to system");
+                SaveAllData();
+            }
+            else
+            {
+                Console.WriteLine("Error: Cannot add null appointment");
+            }
+        }
+
+        /// <summary>
+        /// Remove patient from the system
+        /// </summary>
+        /// <param name="patientId">ID of patient to remove</param>
+        /// <returns>True if patient was removed, false otherwise</returns>
+        public bool RemovePatient(int patientId)
+        {
+            Patient patient = Patients.FirstOrDefault(p => p.Id == patientId);
+            if (patient != null)
+            {
+                Patients.Remove(patient);
+                Console.WriteLine($"Patient {patient.FirstName} {patient.LastName} (ID: {patientId}) removed from system");
+                SaveAllData();
+                return true;
+            }
+            Console.WriteLine($"Patient with ID {patientId} not found");
+            return false;
+        }
+
+        /// <summary>
+        /// Remove doctor from the system
+        /// </summary>
+        /// <param name="doctorId">ID of doctor to remove</param>
+        /// <returns>True if doctor was removed, false otherwise</returns>
+        public bool RemoveDoctor(int doctorId)
+        {
+            Doctor doctor = Doctors.FirstOrDefault(d => d.Id == doctorId);
+            if (doctor != null)
+            {
+                Doctors.Remove(doctor);
+                Console.WriteLine($"Doctor {doctor.FirstName} {doctor.LastName} (ID: {doctorId}) removed from system");
+                SaveAllData();
+                return true;
+            }
+            Console.WriteLine($"Doctor with ID {doctorId} not found");
+            return false;
+        }
+
+        /// <summary>
+        /// Get system statistics
+        /// </summary>
+        /// <returns>Formatted string with system statistics</returns>
+        public string GetSystemStatistics()
+        {
+            return $"System Statistics:\n" +
+                   $"- Total Patients: {Patients.Count}\n" +
+                   $"- Total Doctors: {Doctors.Count}\n" +
+                   $"- Total Administrators: {Administrators.Count}\n" +
+                   $"- Total Appointments: {Appointments.Count}";
+        }
+
+        /// <summary>
+        /// Validate data integrity across all collections
+        /// </summary>
+        /// <returns>True if data is consistent, false otherwise</returns>
+        public bool ValidateDataIntegrity()
+        {
+            bool isValid = true;
+            Console.WriteLine("=== Validating Data Integrity ===");
+
+            // Check for duplicate IDs
+            var allUsers = new List<User>();
+            allUsers.AddRange(Patients);
+            allUsers.AddRange(Doctors);
+            allUsers.AddRange(Administrators);
+
+            var duplicateIds = allUsers.GroupBy(u => u.Id)
+                                     .Where(g => g.Count() > 1)
+                                     .Select(g => g.Key);
+
+            if (duplicateIds.Any())
+            {
+                Console.WriteLine($"ERROR: Duplicate user IDs found: {string.Join(", ", duplicateIds)}");
+                isValid = false;
+            }
+
+            // Check appointment references
+            foreach (var appointment in Appointments)
+            {
+                if (!Doctors.Any(d => d.Id == appointment.DoctorId))
+                {
+                    Console.WriteLine($"ERROR: Appointment {appointment.AppointmentId} references non-existent doctor ID {appointment.DoctorId}");
+                    isValid = false;
+                }
+
+                if (!Patients.Any(p => p.Id == appointment.PatientId))
+                {
+                    Console.WriteLine($"ERROR: Appointment {appointment.AppointmentId} references non-existent patient ID {appointment.PatientId}");
+                    isValid = false;
+                }
+            }
+
+            Console.WriteLine(isValid ? "Data integrity check passed" : "Data integrity check failed");
+            Console.WriteLine("=== Validation Complete ===");
+            return isValid;
         }
     }
 }

@@ -1,0 +1,6 @@
+# This file ensures the Data folder is tracked by Git
+# The Data folder is used to store hospital management system data files:
+# - patients.txt
+# - doctors.txt
+# - administrators.txt
+# - appointments.txt
