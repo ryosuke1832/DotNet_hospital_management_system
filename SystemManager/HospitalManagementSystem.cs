@@ -35,6 +35,9 @@ namespace Assignment1_hospital_management_system.SystemManager
                 // Initialize the system
                 InitializeSystem();
 
+                // Display current user count for debugging
+                DisplaySystemStatus();
+
                 // Main application loop
                 bool exitApplication = false;
                 while (!exitApplication)
@@ -47,30 +50,62 @@ namespace Assignment1_hospital_management_system.SystemManager
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"System error: {ex.Message}");
+                Console.WriteLine($"システムエラー: {ex.Message}");
+                Console.WriteLine($"詳細: {ex.StackTrace}");
                 Utils.PressAnyKeyToContinue();
             }
         }
 
         private void InitializeSystem()
         {
-            Console.WriteLine("Initializing DOTNET Hospital Management System...");
+            Console.WriteLine("DOTNET Hospital Management System を初期化しています...");
             dataManager.Initialize();
-            Console.WriteLine("System initialized successfully!");
+            Console.WriteLine("システム初期化が完了しました！");
+            System.Threading.Thread.Sleep(1000);
+        }
 
-            // サンプルデータが表示された場合はユーザーが既にキーを押しているので、
-            // 追加の待機は不要。サンプルデータが作成されなかった場合のみ短い待機。
-            if (dataManager.Patients.Count == 0 && dataManager.Doctors.Count == 0 && dataManager.Administrators.Count == 0)
+        /// <summary>
+        /// Display current system status for debugging
+        /// </summary>
+        private void DisplaySystemStatus()
+        {
+            Console.WriteLine();
+            Console.WriteLine("=== システム状態 ===");
+            Console.WriteLine($"登録済み管理者: {dataManager.Administrators.Count}名");
+            Console.WriteLine($"登録済み医師: {dataManager.Doctors.Count}名");
+            Console.WriteLine($"登録済み患者: {dataManager.Patients.Count}名");
+            Console.WriteLine($"登録済み予約: {dataManager.Appointments.Count}件");
+
+            // Display actual IDs if sample data exists
+            if (dataManager.Administrators.Count > 0 || dataManager.Doctors.Count > 0 || dataManager.Patients.Count > 0)
             {
-                System.Threading.Thread.Sleep(1000);
+                Console.WriteLine();
+                Console.WriteLine("=== 利用可能なテストアカウント ===");
+
+                foreach (var admin in dataManager.Administrators.Where(a => a.Password == "admin123"))
+                {
+                    Console.WriteLine($"管理者: {admin.FirstName} {admin.LastName} (ID: {admin.Id})");
+                }
+
+                foreach (var doctor in dataManager.Doctors.Where(d => d.Password == "doctor123"))
+                {
+                    Console.WriteLine($"医師: Dr. {doctor.FirstName} {doctor.LastName} (ID: {doctor.Id})");
+                }
+
+                foreach (var patient in dataManager.Patients.Where(p => p.Password == "patient123"))
+                {
+                    Console.WriteLine($"患者: {patient.FirstName} {patient.LastName} (ID: {patient.Id})");
+                }
             }
+            Console.WriteLine("==================");
+            System.Threading.Thread.Sleep(2000);
         }
 
         private void Shutdown()
         {
             dataManager.SaveAllData();
-            Console.WriteLine("Thank you for using DOTNET Hospital Management System!");
-            Console.WriteLine("Press any key to exit...");
+            Console.WriteLine("DOTNET Hospital Management System をご利用いただき、ありがとうございました！");
+            Console.WriteLine("何かキーを押して終了してください...");
             Console.ReadKey();
         }
     }

@@ -25,69 +25,110 @@ namespace Assignment1_hospital_management_system.SystemManager
         /// </summary>
         public bool HandleLogin(MenuController menuController)
         {
-            Utils.DisplayHeader("Login");
+            Utils.DisplayHeader("ログイン");
 
-            // Display test user information if sample data exists
+            // Always display test user information
             DisplayTestUserInfo();
 
             Console.WriteLine();
+            Console.WriteLine("ログイン方法:");
+            Console.WriteLine("1. 上記のテストユーザーIDを入力してください");
+            Console.WriteLine("2. 対応するパスワードを入力してください");
+            Console.WriteLine("3. パスワードは画面上で'*'として表示されます");
+            Console.WriteLine();
 
-            int userId = Utils.GetIntegerInput("ID: ");
-            string password = Utils.GetPasswordInput("Password: ");
+            int userId = Utils.GetIntegerInput("ユーザーID: ");
+            string password = Utils.GetPasswordInput("パスワード: ");
 
             User currentUser = dataManager.FindUser(userId, password);
 
             if (currentUser != null)
             {
-                Console.WriteLine("Valid Credentials");
-                System.Threading.Thread.Sleep(1000);
+                Console.WriteLine("認証成功！システムにログインしています...");
+                System.Threading.Thread.Sleep(1500);
 
                 // Show appropriate menu based on user type
                 return menuController.ShowUserMenu(currentUser);
             }
             else
             {
-                Console.WriteLine("Invalid credentials. Please try again.");
+                Console.WriteLine("IDまたはパスワードが正しくありません。再度お試しください。");
                 Utils.PressAnyKeyToContinue();
                 return false;
             }
         }
 
         /// <summary>
-        /// Display test user information for easy testing
+        /// Always display test user information - even if no sample data exists yet
         /// </summary>
         private void DisplayTestUserInfo()
         {
-            // Check if we have sample data (basic check)
-            if (dataManager.Administrators.Any(a => a.Password == "admin123") ||
-                dataManager.Doctors.Any(d => d.Password == "doctor123") ||
-                dataManager.Patients.Any(p => p.Password == "patient123"))
-            {
-                Console.WriteLine("=== TEST USERS (for demonstration) ===");
+            Console.WriteLine("==========================================");
+            Console.WriteLine("          テスト用ユーザー情報");
+            Console.WriteLine("==========================================");
 
-                // Display Administrator info
-                var admin = dataManager.Administrators.FirstOrDefault(a => a.Password == "admin123");
+            // Check if we have actual sample data
+            var admin = dataManager.Administrators.FirstOrDefault(a => a.Password == "admin123");
+            var doctor = dataManager.Doctors.FirstOrDefault(d => d.Password == "doctor123");
+            var patient = dataManager.Patients.FirstOrDefault(p => p.Password == "patient123");
+
+            if (admin != null || doctor != null || patient != null)
+            {
+                // Display actual sample data
                 if (admin != null)
                 {
-                    Console.WriteLine($"Administrator - ID: {admin.Id}, Password: admin123");
+                    Console.WriteLine("【管理者】");
+                    Console.WriteLine($"  名前: {admin.FirstName} {admin.LastName}");
+                    Console.WriteLine($"  ID: {admin.Id}");
+                    Console.WriteLine($"  パスワード: admin123");
+                    Console.WriteLine();
                 }
 
-                // Display Doctor info
-                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Password == "doctor123");
                 if (doctor != null)
                 {
-                    Console.WriteLine($"Doctor - ID: {doctor.Id}, Password: doctor123");
+                    Console.WriteLine("【医師】");
+                    Console.WriteLine($"  名前: Dr. {doctor.FirstName} {doctor.LastName}");
+                    Console.WriteLine($"  ID: {doctor.Id}");
+                    Console.WriteLine($"  パスワード: doctor123");
+                    Console.WriteLine($"  専門: {doctor.Specialization}");
+                    Console.WriteLine();
                 }
 
-                // Display Patient info
-                var patient = dataManager.Patients.FirstOrDefault(p => p.Password == "patient123");
                 if (patient != null)
                 {
-                    Console.WriteLine($"Patient - ID: {patient.Id}, Password: patient123");
+                    Console.WriteLine("【患者】");
+                    Console.WriteLine($"  名前: {patient.FirstName} {patient.LastName}");
+                    Console.WriteLine($"  ID: {patient.Id}");
+                    Console.WriteLine($"  パスワード: patient123");
+                    Console.WriteLine();
                 }
-
-                Console.WriteLine("======================================");
             }
+            else
+            {
+                // Display fixed test IDs if no sample data exists yet
+                Console.WriteLine("固定テストIDを使用してください：");
+                Console.WriteLine();
+                Console.WriteLine("【管理者】");
+                Console.WriteLine("  名前: David Adminson");
+                Console.WriteLine("  ID: 99999");
+                Console.WriteLine("  パスワード: admin123");
+                Console.WriteLine();
+                Console.WriteLine("【医師】");
+                Console.WriteLine("  名前: Dr. Jack Doctorson");
+                Console.WriteLine("  ID: 88888");
+                Console.WriteLine("  パスワード: doctor123");
+                Console.WriteLine();
+                Console.WriteLine("【患者】");
+                Console.WriteLine("  名前: David Patientson");
+                Console.WriteLine("  ID: 77777");
+                Console.WriteLine("  パスワード: patient123");
+                Console.WriteLine();
+                Console.WriteLine("注意: プログラム起動時に自動的にこれらのIDでサンプルデータが作成されます");
+            }
+
+            Console.WriteLine("==========================================");
+            Console.WriteLine("上記のIDとパスワードでログインできます");
+            Console.WriteLine("==========================================");
         }
     }
 }

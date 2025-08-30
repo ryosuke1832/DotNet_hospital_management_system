@@ -154,5 +154,56 @@ namespace Assignment1_hospital_management_system.Utilities
             Console.WriteLine();
             return password;
         }
+
+
+        /// <summary>
+        /// Get valid ID input from user with better error handling
+        /// </summary>
+        /// <param name="prompt">The prompt message to display</param>
+        /// <returns>Valid integer ID</returns>
+        public static int GetIdInput(string prompt)
+        {
+            int result;
+            while (true)
+            {
+                Console.Write(prompt);
+                string input = Console.ReadLine();
+
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    Console.WriteLine("IDを入力してください。");
+                    continue;
+                }
+
+                if (int.TryParse(input, out result))
+                {
+                    if (result > 0)
+                    {
+                        return result;
+                    }
+                    else
+                    {
+                        Console.WriteLine("正の整数を入力してください。");
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("有効な数値を入力してください。");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Display login instructions in Japanese
+        /// </summary>
+        public static void DisplayLoginInstructions()
+        {
+            Console.WriteLine();
+            Console.WriteLine("ログイン方法:");
+            Console.WriteLine("1. 上記のテストユーザーIDを入力してください");
+            Console.WriteLine("2. 対応するパスワードを入力してください");
+            Console.WriteLine("3. パスワードは画面上で'*'として表示されます");
+            Console.WriteLine();
+        }
     }
 }

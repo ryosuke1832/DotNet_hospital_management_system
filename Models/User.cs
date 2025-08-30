@@ -42,7 +42,7 @@ namespace Assignment1_hospital_management_system.Models
         public abstract string GetUserType();
 
         // Virtual method - can be overridden
-        public virtual string ToString()
+        public override string ToString()
         {
             return $"{FirstName} {LastName} (ID: {Id})";
         }
@@ -58,6 +58,12 @@ namespace Assignment1_hospital_management_system.Models
         {
             Random random = new Random();
             return random.Next(10000, 99999);
+        }
+
+        // Method to set a specific ID (useful for testing)
+        public void SetId(int id)
+        {
+            Id = id;
         }
     }
 }
