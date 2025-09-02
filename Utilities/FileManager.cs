@@ -13,8 +13,24 @@ namespace Assignment1_hospital_management_system.Utilities
     /// </summary>
     public static class FileManager
     {
-        // Data folder path
-        public const string DATA_FOLDER = "Data";
+        // Get project root directory (where .csproj file is located)
+        private static string GetProjectRootDirectory()
+        {
+            string currentDirectory = Directory.GetCurrentDirectory();
+            DirectoryInfo directory = new DirectoryInfo(currentDirectory);
+
+            // Walk up the directory tree to find the project root (containing .csproj file)
+            while (directory != null && !directory.GetFiles("*.csproj").Any())
+            {
+                directory = directory.Parent;
+            }
+
+            // If project root found, use it; otherwise use current directory
+            return directory?.FullName ?? currentDirectory;
+        }
+
+        // Data folder path - now uses project root
+        public static readonly string DATA_FOLDER = Path.Combine(GetProjectRootDirectory(), "Data");
 
         // File paths for data storage within Data folder
         public static readonly string PATIENTS_FILE = Path.Combine(DATA_FOLDER, "patients.txt");
@@ -29,34 +45,55 @@ namespace Assignment1_hospital_management_system.Utilities
         {
             try
             {
+                Console.WriteLine($"Project root directory: {GetProjectRootDirectory()}");
+                Console.WriteLine($"Data folder path: {DATA_FOLDER}");
+
                 // Create Data folder if it doesn't exist
                 if (!Directory.Exists(DATA_FOLDER))
                 {
                     Directory.CreateDirectory(DATA_FOLDER);
                     Console.WriteLine($"Created data folder: {DATA_FOLDER}");
                 }
+                else
+                {
+                    Console.WriteLine($"Data folder exists: {DATA_FOLDER}");
+                }
 
-                // Create individual data files
+                // Create individual data files with empty content if they don't exist
                 CreateFileIfNotExists(PATIENTS_FILE);
                 CreateFileIfNotExists(DOCTORS_FILE);
                 CreateFileIfNotExists(ADMINISTRATORS_FILE);
                 CreateFileIfNotExists(APPOINTMENTS_FILE);
+
+                Console.WriteLine("Data files initialization completed.");
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error initializing data files: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
             }
         }
 
         /// <summary>
-        /// Create file if it doesn't exist
+        /// Create empty file if it doesn't exist
         /// </summary>
         private static void CreateFileIfNotExists(string filePath)
         {
-            if (!File.Exists(filePath))
+            try
             {
-                File.Create(filePath).Dispose();
-                Console.WriteLine($"Created data file: {filePath}");
+                if (!File.Exists(filePath))
+                {
+                    File.WriteAllText(filePath, ""); // Create empty file
+                    Console.WriteLine($"Created empty data file: {filePath}");
+                }
+                else
+                {
+                    Console.WriteLine($"Data file exists: {filePath}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating file {filePath}: {ex.Message}");
             }
         }
 
@@ -94,6 +131,8 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(PATIENTS_FILE))
                 {
                     string[] lines = File.ReadAllLines(PATIENTS_FILE);
+                    Console.WriteLine($"Reading {lines.Length} lines from {PATIENTS_FILE}");
+
                     foreach (string line in lines)
                     {
                         if (!string.IsNullOrWhiteSpace(line))
@@ -109,7 +148,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 }
                 else
                 {
-                    Console.WriteLine($"Patients file not found: {PATIENTS_FILE}");
+                    Console.WriteLine($"Patients file not found: {PATIENTS_FILE} - will be created when needed");
                 }
             }
             catch (Exception ex)
@@ -196,6 +235,8 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(DOCTORS_FILE))
                 {
                     string[] lines = File.ReadAllLines(DOCTORS_FILE);
+                    Console.WriteLine($"Reading {lines.Length} lines from {DOCTORS_FILE}");
+
                     foreach (string line in lines)
                     {
                         if (!string.IsNullOrWhiteSpace(line))
@@ -211,7 +252,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 }
                 else
                 {
-                    Console.WriteLine($"Doctors file not found: {DOCTORS_FILE}");
+                    Console.WriteLine($"Doctors file not found: {DOCTORS_FILE} - will be created when needed");
                 }
             }
             catch (Exception ex)
@@ -303,6 +344,8 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(ADMINISTRATORS_FILE))
                 {
                     string[] lines = File.ReadAllLines(ADMINISTRATORS_FILE);
+                    Console.WriteLine($"Reading {lines.Length} lines from {ADMINISTRATORS_FILE}");
+
                     foreach (string line in lines)
                     {
                         if (!string.IsNullOrWhiteSpace(line))
@@ -318,7 +361,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 }
                 else
                 {
-                    Console.WriteLine($"Administrators file not found: {ADMINISTRATORS_FILE}");
+                    Console.WriteLine($"Administrators file not found: {ADMINISTRATORS_FILE} - will be created when needed");
                 }
             }
             catch (Exception ex)
@@ -395,6 +438,8 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(APPOINTMENTS_FILE))
                 {
                     string[] lines = File.ReadAllLines(APPOINTMENTS_FILE);
+                    Console.WriteLine($"Reading {lines.Length} lines from {APPOINTMENTS_FILE}");
+
                     foreach (string line in lines)
                     {
                         if (!string.IsNullOrWhiteSpace(line))
@@ -410,7 +455,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 }
                 else
                 {
-                    Console.WriteLine($"Appointments file not found: {APPOINTMENTS_FILE}");
+                    Console.WriteLine($"Appointments file not found: {APPOINTMENTS_FILE} - will be created when needed");
                 }
             }
             catch (Exception ex)
@@ -461,11 +506,15 @@ namespace Assignment1_hospital_management_system.Utilities
         public static void DisplayFileInformation()
         {
             Console.WriteLine("=== Data Files Information ===");
-            Console.WriteLine($"Data Folder: {Path.GetFullPath(DATA_FOLDER)}");
-            Console.WriteLine($"Patients File: {Path.GetFullPath(PATIENTS_FILE)} - Exists: {File.Exists(PATIENTS_FILE)}");
-            Console.WriteLine($"Doctors File: {Path.GetFullPath(DOCTORS_FILE)} - Exists: {File.Exists(DOCTORS_FILE)}");
-            Console.WriteLine($"Administrators File: {Path.GetFullPath(ADMINISTRATORS_FILE)} - Exists: {File.Exists(ADMINISTRATORS_FILE)}");
-            Console.WriteLine($"Appointments File: {Path.GetFullPath(APPOINTMENTS_FILE)} - Exists: {File.Exists(APPOINTMENTS_FILE)}");
+            Console.WriteLine($"Current Working Directory: {Directory.GetCurrentDirectory()}");
+            Console.WriteLine($"Project Root Directory: {GetProjectRootDirectory()}");
+            Console.WriteLine($"Data Folder: {DATA_FOLDER}");
+            Console.WriteLine();
+            Console.WriteLine("File Status:");
+            Console.WriteLine($"Patients File: {PATIENTS_FILE} - Exists: {File.Exists(PATIENTS_FILE)}");
+            Console.WriteLine($"Doctors File: {DOCTORS_FILE} - Exists: {File.Exists(DOCTORS_FILE)}");
+            Console.WriteLine($"Administrators File: {ADMINISTRATORS_FILE} - Exists: {File.Exists(ADMINISTRATORS_FILE)}");
+            Console.WriteLine($"Appointments File: {APPOINTMENTS_FILE} - Exists: {File.Exists(APPOINTMENTS_FILE)}");
             Console.WriteLine("=============================");
         }
     }
