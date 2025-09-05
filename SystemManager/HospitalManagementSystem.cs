@@ -21,9 +21,14 @@ namespace Assignment1_hospital_management_system.SystemManager
         {
             // Initialize all system components
             dataManager = new DataManager();
+
+            // DataManagerをUserクラスに設定
+            User.SetDataManager(dataManager);
+
             authService = new AuthenticationService(dataManager);
             menuController = new MenuController(dataManager);
         }
+
 
         /// <summary>
         /// Main entry point for the hospital system

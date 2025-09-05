@@ -58,12 +58,6 @@ namespace Assignment1_hospital_management_system.Models
             return $"Admin: {FirstName} {LastName} (ID: {Id}) | Department: {Department} | Access: {AccessLevel}";
         }
 
-        // Override ID generation for administrators (special ID range)
-        protected override int GenerateId()
-        {
-            Random random = new Random();
-            return random.Next(90000, 99999); // Administrators get IDs in 90000-99999 range
-        }
 
         // Administrator-specific methods - Method overloading examples
         public void AddUser(Patient patient)

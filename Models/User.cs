@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+using Assignment1_hospital_management_system.SystemManager;
 
 namespace Assignment1_hospital_management_system.Models
 {
-    // Base class - Common properties and methods for all users
     public abstract class User
     {
         public int Id { get; set; }
@@ -17,50 +13,63 @@ namespace Assignment1_hospital_management_system.Models
         public string Address { get; set; }
         public string Password { get; set; }
 
-        // Constructor base
-        public User()
+        // DataManager reference for unique ID generation
+        private static DataManager _dataManager;
+
+        public static void SetDataManager(DataManager dataManager)
         {
-            Id = GenerateId();
+            _dataManager = dataManager;
         }
 
-        // Constructor add names
+        // Constructor base - Generate unique ID using DataManager
+        public User()
+        {
+            if (_dataManager != null)
+            {
+                Id = _dataManager.GenerateUniqueUserId();
+            }
+            else
+            {
+                // Fallback - use old random generation method
+                Id = GenerateId();
+                Console.WriteLine($"Warning: Using fallback ID generation. ID: {Id}");
+            }
+        }
+
+        // 既存のコンストラクタ...
         public User(string firstName, string lastName) : this()
         {
             FirstName = firstName;
             LastName = lastName;
         }
 
-        // Constructor add names and contact info
         public User(string firstName, string lastName, string email, string phone) : this(firstName, lastName)
         {
             Email = email;
             Phone = phone;
         }
 
-        // Abstract methods - must be overridden in derived classes
-        public abstract void ShowMainMenu();
-        public abstract string GetUserType();
-
-        // Virtual method - can be overridden
-        public override string ToString()
-        {
-            return $"{FirstName} {LastName} (ID: {Id})";
-        }
-
-        // Common method for authentication
-        public bool Login(int id, string password)
-        {
-            return Id == id && Password == password;
-        }
-
-        // Virtual method for ID generation
+        // Backward compatibility - old GenerateId method
         protected virtual int GenerateId()
         {
             Random random = new Random();
             return random.Next(10000, 99999);
         }
 
-        // Method to set a specific ID (useful for testing)
+        // Other methods remain unchanged...
+        public abstract void ShowMainMenu();
+        public abstract string GetUserType();
+
+        public override string ToString()
+        {
+            return $"{FirstName} {LastName} (ID: {Id})";
+        }
+
+        public bool Login(int id, string password)
+        {
+            return Id == id && Password == password;
+        }
+
         public void SetId(int id)
         {
             Id = id;

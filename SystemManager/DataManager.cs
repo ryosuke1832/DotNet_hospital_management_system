@@ -78,6 +78,48 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
+        /// Generate unique user ID that doesn't conflict with existing users
+        /// </summary>
+        /// <returns>Unique ID</returns>
+        public int GenerateUniqueUserId()
+        {
+            Random random = new Random();
+            int newId;
+            int maxAttempts = 1000; // Prevent infinite loop
+            int attempts = 0;
+
+            do
+            {
+                // Generate ID in range 10000-99999 for all user types
+                newId = random.Next(10000, 99999);
+
+                attempts++;
+                if (attempts >= maxAttempts)
+                {
+                    throw new InvalidOperationException("Failed to generate unique ID. System may be at capacity.");
+                }
+            }
+            while (IsIdAlreadyExists(newId));
+
+            Console.WriteLine($"Generated unique ID: {newId}");
+            return newId;
+        }
+
+        /// <summary>
+        /// Check if the specified ID already exists in the system
+        /// </summary>
+        /// <param name="id">ID to check</param>
+        /// <returns>True if ID exists, false otherwise</returns>
+        private bool IsIdAlreadyExists(int id)
+        {
+            // Check all user types for ID conflicts
+            return Patients.Any(p => p.Id == id) ||
+                   Doctors.Any(d => d.Id == id) ||
+                   Administrators.Any(a => a.Id == id);
+        }
+
+
+        /// <summary>
         /// Save all data to files with comprehensive logging
         /// </summary>
         public void SaveAllData()
@@ -94,25 +136,20 @@ namespace Assignment1_hospital_management_system.SystemManager
             }
         }
 
+
+
         /// <summary>
-        /// Create sample data for testing if no data exists
+        /// Create default admin and sample data if needed
         /// </summary>
         private void CreateSampleDataIfNeeded()
         {
-            if (Patients.Count == 0 && Doctors.Count == 0 && Administrators.Count == 0)
+            // Always ensure default admin exists
+            CreateDefaultAdminIfNeeded();
+
+            // Create sample data only if no data exists at all
+            if (Patients.Count == 0 && Doctors.Count == 0)
             {
                 Console.WriteLine("No existing data found. Creating sample data for testing...");
-
-                // Create sample administrator
-                Administrator sampleAdmin = new Administrator("David", "Adminson")
-                {
-                    Email = "admin@hospital.com",
-                    Phone = "0412345678",
-                    Address = "123 Admin Street, Sydney, NSW",
-                    Password = "admin123",
-                    Department = "Administration"
-                };
-                Administrators.Add(sampleAdmin);
 
                 // Create sample doctor
                 Doctor sampleDoctor = new Doctor("Jack", "Doctorson", "General Practice")
@@ -148,7 +185,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 SaveAllData();
 
                 // Display sample data for testing
-                DisplaySampleDataInformation(sampleAdmin, sampleDoctor, samplePatient);
+                DisplaySampleDataInformation(sampleDoctor, samplePatient);
             }
             else
             {
@@ -157,35 +194,86 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
+        /// Create default administrator if none exists
+        /// </summary>
+        private void CreateDefaultAdminIfNeeded()
+        {
+            // Check if admin with ID 99999 already exists
+            if (!Administrators.Any(a => a.Id == 99999))
+            {
+                Console.WriteLine("Creating default administrator account...");
+
+                // Create admin without calling base constructor that generates random ID
+                Administrator defaultAdmin = new Administrator()
+                {
+                    FirstName = "System",
+                    LastName = "Administrator",
+                    Email = "admin@hospital.com",
+                    Phone = "0412345678",
+                    Address = "123 Admin Street, Sydney, NSW",
+                    Password = "admin1234",
+                    Department = "Administration",
+                    AccessLevel = "Full Access",
+                    Id = 99999  // Set ID directly
+                };
+
+                Administrators.Add(defaultAdmin);
+
+                Console.WriteLine($"Default administrator created - ID: {defaultAdmin.Id}, Password: admin1234");
+
+                // Save immediately to ensure persistence
+                SaveAllData();
+            }
+            else
+            {
+                Console.WriteLine("Default administrator already exists.");
+            }
+        }
+
+        /// <summary>
         /// Display sample data information for testing purposes
         /// </summary>
-        private void DisplaySampleDataInformation(Administrator admin, Doctor doctor, Patient patient)
+        private void DisplaySampleDataInformation(Doctor doctor, Patient patient)
         {
             Console.Clear();
             Utils.DisplayHeader("Sample Test Data Created");
             Console.WriteLine("The following test users have been created for demonstration:");
             Console.WriteLine();
 
-            Console.WriteLine("=== ADMINISTRATOR ===");
-            Console.WriteLine($"Name: {admin.FirstName} {admin.LastName}");
-            Console.WriteLine($"ID: {admin.Id}");
-            Console.WriteLine($"Password: admin123");
-            Console.WriteLine($"Department: {admin.Department}");
-            Console.WriteLine();
+            // Always show default admin
+            var defaultAdmin = Administrators.FirstOrDefault(a => a.Id == 99999);
+            if (defaultAdmin != null)
+            {
+                Console.WriteLine("=== DEFAULT ADMINISTRATOR ===");
+                Console.WriteLine($"Name: {defaultAdmin.FirstName} {defaultAdmin.LastName}");
+                Console.WriteLine($"ID: {defaultAdmin.Id}");
+                Console.WriteLine($"Password: admin1234");
+                Console.WriteLine($"Department: {defaultAdmin.Department}");
+                Console.WriteLine();
+            }
 
-            Console.WriteLine("=== DOCTOR ===");
-            Console.WriteLine($"Name: Dr. {doctor.FirstName} {doctor.LastName}");
-            Console.WriteLine($"ID: {doctor.Id}");
-            Console.WriteLine($"Password: doctor123");
-            Console.WriteLine($"Specialization: {doctor.Specialization}");
-            Console.WriteLine();
+            if (doctor != null)
+            {
+                Console.WriteLine("=== DOCTOR ===");
+                Console.WriteLine($"Name: Dr. {doctor.FirstName} {doctor.LastName}");
+                Console.WriteLine($"ID: {doctor.Id}");
+                Console.WriteLine($"Password: doctor123");
+                Console.WriteLine($"Specialization: {doctor.Specialization}");
+                Console.WriteLine();
+            }
 
-            Console.WriteLine("=== PATIENT ===");
-            Console.WriteLine($"Name: {patient.FirstName} {patient.LastName}");
-            Console.WriteLine($"ID: {patient.Id}");
-            Console.WriteLine($"Password: patient123");
-            Console.WriteLine($"Assigned Doctor: Dr. {doctor.FirstName} {doctor.LastName}");
-            Console.WriteLine();
+            if (patient != null)
+            {
+                Console.WriteLine("=== PATIENT ===");
+                Console.WriteLine($"Name: {patient.FirstName} {patient.LastName}");
+                Console.WriteLine($"ID: {patient.Id}");
+                Console.WriteLine($"Password: patient123");
+                if (patient.AssignedDoctorId.HasValue && doctor != null)
+                {
+                    Console.WriteLine($"Assigned Doctor: Dr. {doctor.FirstName} {doctor.LastName}");
+                }
+                Console.WriteLine();
+            }
 
             Console.WriteLine("========================================");
             Console.WriteLine("You can use any of the above credentials to test the system.");
@@ -203,6 +291,22 @@ namespace Assignment1_hospital_management_system.SystemManager
         /// <returns>User object if found, null otherwise</returns>
         public User FindUser(int id, string password)
         {
+            Console.WriteLine($"Searching for user with ID: {id}");
+            Console.WriteLine($"Available users in memory:");
+            Console.WriteLine($"- Patients: {Patients.Count}");
+            Console.WriteLine($"- Doctors: {Doctors.Count}");
+            Console.WriteLine($"- Administrators: {Administrators.Count}");
+
+            // Debug: Show all admin IDs and passwords
+            if (Administrators.Count > 0)
+            {
+                Console.WriteLine("Administrator IDs in memory:");
+                foreach (var admin in Administrators)
+                {
+                    Console.WriteLine($"  ID: {admin.Id}, Password: {admin.Password}, Name: {admin.FirstName} {admin.LastName}");
+                }
+            }
+
             // Check patients
             User user = Patients.FirstOrDefault(p => p.Id == id && p.Password == password);
             if (user != null)
