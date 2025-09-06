@@ -1,4 +1,5 @@
-﻿using Assignment1_hospital_management_system.Utilities;
+﻿using Assignment1_hospital_management_system.SystemManager;
+using Assignment1_hospital_management_system.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,13 +19,30 @@ namespace Assignment1_hospital_management_system.Models
         public string Description { get; set; }
         public DateTime CreatedDate { get; set; }
         public string Status { get; set; }
+        private static DataManager _dataManager;
+
+        public static void SetDataManager(DataManager dataManager)
+        {
+            _dataManager = dataManager;
+        }
+
+
 
         /// <summary>
         /// Default constructor - generates new appointment with unique ID
         /// </summary>
         public Appointment()
         {
-            AppointmentId = Utils.GenerateId();
+            if (_dataManager != null)
+            {
+                AppointmentId = _dataManager.GenerateUniqueId();
+            }
+            else
+            {
+                throw new InvalidOperationException(
+                    "DataManager must be set before creating Appointment objects. Call Appointment.SetDataManager() first.");
+            }
+
             CreatedDate = DateTime.Now;
             Status = "Scheduled";
             Description = string.Empty;

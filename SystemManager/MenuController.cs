@@ -3,104 +3,48 @@ using Assignment1_hospital_management_system.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Assignment1_hospital_management_system.SystemManager
 {
-
     /// <summary>
     /// Controls all menu operations and user interactions
     /// </summary>
     public class MenuController
     {
         private DataManager dataManager;
-        private PatientMenuHandler patientMenu;
-        private DoctorMenuHandler doctorMenu;
-        private AdminMenuHandler adminMenu;
-        private ReceptionistMenuHandler receptionistMenu;
+        private Dictionary<Type, IMenuHandler> menuHandlers;
 
         public MenuController(DataManager dataManager)
         {
             this.dataManager = dataManager;
-            this.patientMenu = new PatientMenuHandler(dataManager);
-            this.doctorMenu = new DoctorMenuHandler(dataManager);
-            this.adminMenu = new AdminMenuHandler(dataManager);
-            this.receptionistMenu = new ReceptionistMenuHandler(dataManager);
+            InitializeMenuHandlers();
         }
 
-        /// <summary>
-        /// デリゲートと匿名メソッドを使用した患者検索機能
-        /// 既存のShowAllPatients()メソッドを拡張
-        /// </summary>
-        public void ShowFilteredPatients()
+        private void InitializeMenuHandlers()
         {
-            Utils.DisplayHeader("患者フィルタリング");
-
-            Console.WriteLine("フィルタオプション:");
-            Console.WriteLine("1. 医師が割り当て済みの患者");
-            Console.WriteLine("2. メールアドレスが設定済みの患者");
-            Console.WriteLine("3. 全ての患者");
-
-            int choice = Utils.GetIntegerInput("選択してください: ");
-
-            // デリゲートと匿名メソッドの使用例
-            Delegates.UserFilter<Patient> filter = null;
-
-            switch (choice)
+            menuHandlers = new Dictionary<Type, IMenuHandler>
             {
-                case 1:
-                    // 匿名メソッド例1
-                    filter = delegate (Patient p) { return p.AssignedDoctorId.HasValue; };
-                    break;
-                case 2:
-                    // 匿名メソッド例2（ラムダ式も使用可能）
-                    filter = delegate (Patient p) { return !string.IsNullOrEmpty(p.Email); };
-                    break;
-                case 3:
-                    // 匿名メソッド例3
-                    filter = delegate (Patient p) { return true; };
-                    break;
-                default:
-                    Console.WriteLine("無効な選択です。");
-                    Utils.PressAnyKeyToContinue();
-                    return;
-            }
-
-            // フィルタリング実行
-            var filteredPatients = Delegates.FilterUsers(dataManager.Patients, filter);
-
-            // ログ用デリゲートの使用例
-            Delegates.LogAction logger = delegate (string message)
-            {
-                Console.WriteLine($"[ログ] {DateTime.Now:HH:mm:ss} - {message}");
+                { typeof(Patient), new PatientMenuHandler(dataManager) },
+                { typeof(Doctor), new DoctorMenuHandler(dataManager) },
+                { typeof(Administrator), new AdminMenuHandler(dataManager) },
+                { typeof(Receptionist), new ReceptionistMenuHandler(dataManager) }
             };
-
-            // フォーマット用デリゲートの使用例
-            Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
-            {
-                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
-                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "未割り当て";
-                return $"{p.FirstName} {p.LastName} | 担当医: {doctorName} | Email: {p.Email}";
-            };
-
-            // 実行とログ記録
-            Delegates.ExecuteWithLogging("患者一覧表示", logger, delegate ()
-            {
-                Console.WriteLine($"\nフィルタ結果: {filteredPatients.Count}人の患者");
-                Console.WriteLine("".PadRight(70, '-'));
-                Delegates.DisplayUsers(filteredPatients, formatter);
-            });
-
-            Utils.PressAnyKeyToContinue();
         }
-
 
         /// <summary>
         /// Show appropriate menu based on user type
         /// </summary>
         public bool ShowUserMenu(User currentUser)
         {
+            var userType = currentUser.GetType();
+
+            if (!menuHandlers.ContainsKey(userType))
+            {
+                Console.WriteLine($"No menu handler found for user type: {userType.Name}");
+                return false;
+            }
+
+            var handler = menuHandlers[userType];
             bool logout = false;
             bool exitSystem = false;
 
@@ -111,30 +55,9 @@ namespace Assignment1_hospital_management_system.SystemManager
                 try
                 {
                     int choice = Utils.GetIntegerInput("Please enter your choice: ");
-
-                    switch (currentUser.GetUserType())
-                    {
-                        case "Patient":
-                            var result = patientMenu.HandleMenu((Patient)currentUser, choice);
-                            logout = result.logout;
-                            exitSystem = result.exit;
-                            break;
-                        case "Doctor":
-                            var doctorResult = doctorMenu.HandleMenu((Doctor)currentUser, choice);
-                            logout = doctorResult.logout;
-                            exitSystem = doctorResult.exit;
-                            break;
-                        case "Administrator":
-                            var adminResult = adminMenu.HandleMenu((Administrator)currentUser, choice);
-                            logout = adminResult.logout;
-                            exitSystem = adminResult.exit;
-                            break;
-                        case "Receptionist": 
-                            var receptionistResult = receptionistMenu.HandleMenu((Receptionist)currentUser, choice);
-                            logout = receptionistResult.logout;
-                            exitSystem = receptionistResult.exit;
-                            break;
-                    }
+                    var result = handler.HandleMenuChoice(currentUser, choice);
+                    logout = result.logout;
+                    exitSystem = result.exit;
                 }
                 catch (Exception ex)
                 {
@@ -151,14 +74,83 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             return exitSystem;
         }
+
+        /// <summary>
+        /// デリゲートと匿名メソッドを使用した患者検索機能
+        /// </summary>
+        public void ShowFilteredPatients()
+        {
+            Utils.DisplayHeader("患者フィルタリング");
+
+            Console.WriteLine("フィルタオプション:");
+            Console.WriteLine("1. 医師が割り当て済みの患者");
+            Console.WriteLine("2. メールアドレスが設定済みの患者");
+            Console.WriteLine("3. 全ての患者");
+
+            int choice = Utils.GetIntegerInput("選択してください: ");
+
+            Delegates.UserFilter<Patient> filter = choice switch
+            {
+                1 => delegate (Patient p) { return p.AssignedDoctorId.HasValue; }
+                ,
+                2 => delegate (Patient p) { return !string.IsNullOrEmpty(p.Email); }
+                ,
+                3 => delegate (Patient p) { return true; }
+                ,
+                _ => null
+            };
+
+            if (filter == null)
+            {
+                Console.WriteLine("無効な選択です。");
+                Utils.PressAnyKeyToContinue();
+                return;
+            }
+
+            var filteredPatients = Delegates.FilterUsers(dataManager.Patients, filter);
+
+            Delegates.LogAction logger = delegate (string message)
+            {
+                Console.WriteLine($"[ログ] {DateTime.Now:HH:mm:ss} - {message}");
+            };
+
+            Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
+            {
+                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
+                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "未割り当て";
+                return $"{p.FirstName} {p.LastName} | 担当医: {doctorName} | Email: {p.Email}";
+            };
+
+            Delegates.ExecuteWithLogging("患者一覧表示", logger, delegate ()
+            {
+                Console.WriteLine($"\nフィルタ結果: {filteredPatients.Count}人の患者");
+                Console.WriteLine("".PadRight(70, '-'));
+                Delegates.DisplayUsers(filteredPatients, formatter);
+            });
+
+            Utils.PressAnyKeyToContinue();
+        }
     }
 
     /// <summary>
-    /// Base class for menu handlers - provides common menu functionality
+    /// 共通メニューハンドラーインターフェース
     /// </summary>
-    public abstract class BaseMenuHandler
+    public interface IMenuHandler
+    {
+        (bool logout, bool exit) HandleMenuChoice(User user, int choice);
+    }
+
+    /// <summary>
+    /// 基底メニューハンドラークラス - 共通機能を統一
+    /// </summary>
+    public abstract class BaseMenuHandler : IMenuHandler
     {
         protected DataManager dataManager;
+
+        // 各メニューの共通オプション設定
+        protected abstract int LogoutOption { get; }
+        protected abstract int ExitOption { get; }
+        protected abstract Dictionary<int, MenuAction> MenuActions { get; }
 
         protected BaseMenuHandler(DataManager dataManager)
         {
@@ -166,53 +158,85 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
-        /// Handle logout and exit options that are common to all menus
+        /// 統一されたメニュー選択処理
         /// </summary>
-        protected (bool logout, bool exit) HandleCommonOptions(int choice, int logoutOption, int exitOption)
+        public virtual (bool logout, bool exit) HandleMenuChoice(User user, int choice)
         {
-            if (choice == logoutOption)
+            // 共通オプション（ログアウト/終了）の処理
+            if (choice == LogoutOption)
+            {
                 return (true, false);
-            if (choice == exitOption)
-                return (false, true);
+            }
 
+            if (choice == ExitOption)
+            {
+                return (false, true);
+            }
+
+            // 各メニュー固有のアクション実行
+            if (MenuActions.ContainsKey(choice))
+            {
+                try
+                {
+                    MenuActions[choice].Invoke(user);
+                    return (false, false);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"メニュー処理中にエラーが発生しました: {ex.Message}");
+                    Utils.PressAnyKeyToContinue();
+                    return (false, false);
+                }
+            }
+
+            // 無効な選択肢の処理
             Console.WriteLine("Invalid option. Please try again.");
             Utils.PressAnyKeyToContinue();
             return (false, false);
         }
+
+        /// <summary>
+        /// 共通メニューフッター表示
+        /// </summary>
+        protected void ShowMenuFooter()
+        {
+            Console.WriteLine("========================================");
+        }
+
+        /// <summary>
+        /// 共通エラーハンドリング
+        /// </summary>
+        protected void HandleError(string operation, Exception ex)
+        {
+            Console.WriteLine($"Error in {operation}: {ex.Message}");
+            Utils.PressAnyKeyToContinue();
+        }
     }
 
     /// <summary>
-    /// Handles all patient menu operations
+    /// メニューアクションのデリゲート定義
+    /// </summary>
+    public delegate void MenuAction(User user);
+
+    /// <summary>
+    /// 患者メニューハンドラー
     /// </summary>
     public class PatientMenuHandler : BaseMenuHandler
     {
-        public PatientMenuHandler(DataManager dataManager) : base(dataManager) { }
+        protected override int LogoutOption => 5;
+        protected override int ExitOption => 6;
 
-        /// <summary>
-        /// Handle patient menu choices
-        /// </summary>
-        public (bool logout, bool exit) HandleMenu(Patient patient, int choice)
+        protected override Dictionary<int, MenuAction> MenuActions { get; }
+
+        public PatientMenuHandler(DataManager dataManager) : base(dataManager)
         {
-            switch (choice)
+            MenuActions = new Dictionary<int, MenuAction>
             {
-                case 1: // List patient details
-                    ShowPatientDetails(patient);
-                    return (false, false);
-                case 2: // List my doctor details
-                    ShowMyDoctorDetails(patient);
-                    return (false, false);
-                case 3: // List all appointments
-                    ShowPatientAppointments(patient);
-                    return (false, false);
-                case 4: // Book appointment
-                    BookAppointment(patient);
-                    return (false, false);
-                case 5: // Logout
-                case 6: // Exit system
-                    return HandleCommonOptions(choice, 5, 6);
-                default:
-                    return HandleCommonOptions(choice, 5, 6);
-            }
+                { 1, user => ShowPatientDetails((Patient)user) },
+                { 2, user => ShowMyDoctorDetails((Patient)user) },
+                { 3, user => ShowPatientAppointments((Patient)user) },
+                { 4, user => BookAppointment((Patient)user) }
+            };
         }
 
         private void ShowPatientDetails(Patient patient)
@@ -328,40 +352,25 @@ namespace Assignment1_hospital_management_system.SystemManager
     }
 
     /// <summary>
-    /// Handles all doctor menu operations
+    /// 医師メニューハンドラー
     /// </summary>
     public class DoctorMenuHandler : BaseMenuHandler
     {
-        public DoctorMenuHandler(DataManager dataManager) : base(dataManager) { }
+        protected override int LogoutOption => 6;
+        protected override int ExitOption => 7;
 
-        /// <summary>
-        /// Handle doctor menu choices
-        /// </summary>
-        public (bool logout, bool exit) HandleMenu(Doctor doctor, int choice)
+        protected override Dictionary<int, MenuAction> MenuActions { get; }
+
+        public DoctorMenuHandler(DataManager dataManager) : base(dataManager)
         {
-            switch (choice)
+            MenuActions = new Dictionary<int, MenuAction>
             {
-                case 1: // List doctor details
-                    ShowDoctorDetails(doctor);
-                    return (false, false);
-                case 2: // List patients
-                    ShowDoctorPatients(doctor);
-                    return (false, false);
-                case 3: // List appointments
-                    ShowDoctorAppointments(doctor);
-                    return (false, false);
-                case 4: // Check particular patient
-                    CheckParticularPatient(doctor);
-                    return (false, false);
-                case 5: // List appointments with patient
-                    ListAppointmentsWithPatient(doctor);
-                    return (false, false);
-                case 6: // Logout
-                case 7: // Exit
-                    return HandleCommonOptions(choice, 6, 7);
-                default:
-                    return HandleCommonOptions(choice, 6, 7);
-            }
+                { 1, user => ShowDoctorDetails((Doctor)user) },
+                { 2, user => ShowDoctorPatients((Doctor)user) },
+                { 3, user => ShowDoctorAppointments((Doctor)user) },
+                { 4, user => CheckParticularPatient((Doctor)user) },
+                { 5, user => ListAppointmentsWithPatient((Doctor)user) }
+            };
         }
 
         private void ShowDoctorDetails(Doctor doctor)
@@ -480,170 +489,31 @@ namespace Assignment1_hospital_management_system.SystemManager
     }
 
     /// <summary>
-    /// Handles all administrator menu operations
+    /// 管理者メニューハンドラー
     /// </summary>
     public class AdminMenuHandler : BaseMenuHandler
     {
-        public AdminMenuHandler(DataManager dataManager) : base(dataManager) { }
+        protected override int LogoutOption => 10;
+        protected override int ExitOption => 11;
 
-        /// <summary>
-        /// Handle administrator menu choices
-        /// </summary>
-        public (bool logout, bool exit) HandleMenu(Administrator admin, int choice)
+        protected override Dictionary<int, MenuAction> MenuActions { get; }
+
+        public AdminMenuHandler(DataManager dataManager) : base(dataManager)
         {
-            switch (choice)
+            MenuActions = new Dictionary<int, MenuAction>
             {
-                case 1: // List all doctors
-                    ShowAllDoctors();
-                    return (false, false);
-                case 2: // Check doctor details
-                    CheckDoctorDetails();
-                    return (false, false);
-                case 3: // List all patients
-                    ShowAllPatients();
-                    return (false, false);
-                case 4: // Check patient details
-                    CheckPatientDetails();
-                    return (false, false);
-                case 5: // Add doctor
-                    AddDoctor();
-                    return (false, false);
-                case 6: // Add patient
-                    AddPatient();
-                    return (false, false);
-                case 7: // Add receptionist - 新しく追加
-                    AddReceptionist();
-                    return (false, false);
-                case 8: // Show filtered patients
-                    ShowFilteredPatients();
-                    return (false, false);
-                case 9: // Show system statistics
-                    ShowSystemStatisticsWithDelegates();
-                    return (false, false);
-                case 10: // Logout
-                case 11: // Exit 
-                    return HandleCommonOptions(choice, 10, 11);
-                default: // 
-                    return HandleCommonOptions(choice, 10, 11);
-
-            }
+                { 1, user => ShowAllDoctors() },
+                { 2, user => CheckDoctorDetails() },
+                { 3, user => ShowAllPatients() },
+                { 4, user => CheckPatientDetails() },
+                { 5, user => AddDoctor() },
+                { 6, user => AddPatient() },
+                { 7, user => AddReceptionist() },
+                { 8, user => ShowFilteredPatients() },
+                { 9, user => ShowSystemStatisticsWithDelegates() }
+            };
         }
 
-        /// <summary>
-        /// デリゲートを使用したシステム統計表示
-        /// </summary>
-        private void ShowSystemStatisticsWithDelegates()
-        {
-            Utils.DisplayHeader("システム統計 (デリゲート使用)");
-
-            // 統計計算用のデリゲート定義
-            Func<List<Patient>, int> patientCounter = delegate (List<Patient> patients)
-            {
-                return patients.Count;
-            };
-
-            Func<List<Doctor>, int> doctorCounter = delegate (List<Doctor> doctors)
-            {
-                return doctors.Count;
-            };
-
-            // 条件付きカウント用の匿名メソッド
-            Func<List<Patient>, int> assignedPatientCounter = delegate (List<Patient> patients)
-            {
-                return patients.Count(p => p.AssignedDoctorId.HasValue);
-            };
-
-            Func<List<Patient>, int> unassignedPatientCounter = delegate (List<Patient> patients)
-            {
-                return patients.Count(p => !p.AssignedDoctorId.HasValue);
-            };
-
-            // ログ用デリゲート
-            Action<string> systemLogger = delegate (string message)
-            {
-                Console.WriteLine($"[システム] {message}");
-            };
-
-            // 統計情報の表示
-            systemLogger("システム統計を計算中...");
-
-            Console.WriteLine($"総患者数: {patientCounter(dataManager.Patients)}");
-            Console.WriteLine($"総医師数: {doctorCounter(dataManager.Doctors)}");
-            Console.WriteLine($"割り当て済み患者: {assignedPatientCounter(dataManager.Patients)}");
-            Console.WriteLine($"未割り当て患者: {unassignedPatientCounter(dataManager.Patients)}");
-            Console.WriteLine($"総予約数: {dataManager.Appointments.Count}");
-
-            systemLogger("統計計算完了");
-            Utils.PressAnyKeyToContinue();
-        }
-
-        /// <summary>
-        /// デリゲートと匿名メソッドを使用した患者検索機能
-        /// 既存のShowAllPatients()メソッドを拡張
-        /// </summary>
-        public void ShowFilteredPatients()
-        {
-            Utils.DisplayHeader("患者フィルタリング");
-
-            Console.WriteLine("フィルタオプション:");
-            Console.WriteLine("1. 医師が割り当て済みの患者");
-            Console.WriteLine("2. メールアドレスが設定済みの患者");
-            Console.WriteLine("3. 全ての患者");
-
-            int choice = Utils.GetIntegerInput("選択してください: ");
-
-            // デリゲートと匿名メソッドの使用例
-            Delegates.UserFilter<Patient> filter = null;
-
-            switch (choice)
-            {
-                case 1:
-                    // 匿名メソッド例1
-                    filter = delegate (Patient p) { return p.AssignedDoctorId.HasValue; };
-                    break;
-                case 2:
-                    // 匿名メソッド例2（ラムダ式も使用可能）
-                    filter = delegate (Patient p) { return !string.IsNullOrEmpty(p.Email); };
-                    break;
-                case 3:
-                    // 匿名メソッド例3
-                    filter = delegate (Patient p) { return true; };
-                    break;
-                default:
-                    Console.WriteLine("無効な選択です。");
-                    Utils.PressAnyKeyToContinue();
-                    return;
-            }
-
-            // フィルタリング実行
-            var filteredPatients = Delegates.FilterUsers(dataManager.Patients, filter);
-
-            // ログ用デリゲートの使用例
-            Delegates.LogAction logger = delegate (string message)
-            {
-                Console.WriteLine($"[ログ] {DateTime.Now:HH:mm:ss} - {message}");
-            };
-
-            // フォーマット用デリゲートの使用例
-            Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
-            {
-                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
-                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "未割り当て";
-                return $"{p.FirstName} {p.LastName} | 担当医: {doctorName} | Email: {p.Email}";
-            };
-
-            // 実行とログ記録
-            Delegates.ExecuteWithLogging("患者一覧表示", logger, delegate ()
-            {
-                Console.WriteLine($"\nフィルタ結果: {filteredPatients.Count}人の患者");
-                Console.WriteLine("".PadRight(70, '-'));
-                Delegates.DisplayUsers(filteredPatients, formatter);
-            });
-
-            Utils.PressAnyKeyToContinue();
-        }
-       
-        
         private void ShowAllDoctors()
         {
             Utils.DisplayHeader("All Doctors");
@@ -665,7 +535,7 @@ namespace Assignment1_hospital_management_system.SystemManager
         {
             Utils.DisplayHeader("Doctor Details");
 
-            int doctorId = Utils.GetIntegerInput("Please enter the ID of the doctor who's details you are checking, or press n to return to menu: ");
+            int doctorId = Utils.GetIntegerInput("Please enter the ID of the doctor who's details you are checking: ");
 
             Doctor doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == doctorId);
 
@@ -713,7 +583,7 @@ namespace Assignment1_hospital_management_system.SystemManager
         {
             Utils.DisplayHeader("Patient Details");
 
-            int patientId = Utils.GetIntegerInput("Please enter the ID of the patient who's details you are checking, or press n to return to menu: ");
+            int patientId = Utils.GetIntegerInput("Please enter the ID of the patient who's details you are checking: ");
 
             Patient patient = dataManager.Patients.FirstOrDefault(p => p.Id == patientId);
 
@@ -759,7 +629,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Email = email,
                 Phone = phone,
                 Address = address,
-                Password = "password123" // Default password
+                Password = "password123"
             };
 
             dataManager.AddDoctor(newDoctor);
@@ -788,7 +658,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Email = email,
                 Phone = phone,
                 Address = address,
-                Password = "password123", // Default password
+                Password = "password123",
                 MedicalHistory = "No significant medical history"
             };
 
@@ -800,6 +670,7 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             Utils.PressAnyKeyToContinue();
         }
+
         private void AddReceptionist()
         {
             Utils.DisplayHeader("Add Receptionist");
@@ -813,7 +684,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             string phone = Utils.GetStringInput("電話番号: ");
             string address = Utils.GetStringInput("住所: ");
 
-            // 新しい受付嬢を作成
             Receptionist newReceptionist = new Receptionist(firstName, lastName)
             {
                 Email = email,
@@ -822,7 +692,6 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Password = "reception123"
             };
 
-            // システムに追加
             dataManager.AddReceptionist(newReceptionist);
 
             Console.WriteLine();
@@ -833,50 +702,122 @@ namespace Assignment1_hospital_management_system.SystemManager
             Utils.PressAnyKeyToContinue();
         }
 
+        private void ShowFilteredPatients()
+        {
+            Utils.DisplayHeader("患者フィルタリング");
 
-       
+            Console.WriteLine("フィルタオプション:");
+            Console.WriteLine("1. 医師が割り当て済みの患者");
+            Console.WriteLine("2. メールアドレスが設定済みの患者");
+            Console.WriteLine("3. 全ての患者");
 
+            int choice = Utils.GetIntegerInput("選択してください: ");
 
+            Delegates.UserFilter<Patient> filter = choice switch
+            {
+                1 => delegate (Patient p) { return p.AssignedDoctorId.HasValue; }
+                ,
+                2 => delegate (Patient p) { return !string.IsNullOrEmpty(p.Email); }
+                ,
+                3 => delegate (Patient p) { return true; }
+                ,
+                _ => null
+            };
+
+            if (filter == null)
+            {
+                Console.WriteLine("無効な選択です。");
+                Utils.PressAnyKeyToContinue();
+                return;
+            }
+
+            var filteredPatients = Delegates.FilterUsers(dataManager.Patients, filter);
+
+            Delegates.LogAction logger = delegate (string message)
+            {
+                Console.WriteLine($"[ログ] {DateTime.Now:HH:mm:ss} - {message}");
+            };
+
+            Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
+            {
+                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
+                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "未割り当て";
+                return $"{p.FirstName} {p.LastName} | 担当医: {doctorName} | Email: {p.Email}";
+            };
+
+            Delegates.ExecuteWithLogging("患者一覧表示", logger, delegate ()
+            {
+                Console.WriteLine($"\nフィルタ結果: {filteredPatients.Count}人の患者");
+                Console.WriteLine("".PadRight(70, '-'));
+                Delegates.DisplayUsers(filteredPatients, formatter);
+            });
+
+            Utils.PressAnyKeyToContinue();
+        }
+
+        private void ShowSystemStatisticsWithDelegates()
+        {
+            Utils.DisplayHeader("システム統計 (デリゲート使用)");
+
+            Func<List<Patient>, int> patientCounter = delegate (List<Patient> patients)
+            {
+                return patients.Count;
+            };
+
+            Func<List<Doctor>, int> doctorCounter = delegate (List<Doctor> doctors)
+            {
+                return doctors.Count;
+            };
+
+            Func<List<Patient>, int> assignedPatientCounter = delegate (List<Patient> patients)
+            {
+                return patients.Count(p => p.AssignedDoctorId.HasValue);
+            };
+
+            Func<List<Patient>, int> unassignedPatientCounter = delegate (List<Patient> patients)
+            {
+                return patients.Count(p => !p.AssignedDoctorId.HasValue);
+            };
+
+            Action<string> systemLogger = delegate (string message)
+            {
+                Console.WriteLine($"[システム] {message}");
+            };
+
+            systemLogger("システム統計を計算中...");
+
+            Console.WriteLine($"総患者数: {patientCounter(dataManager.Patients)}");
+            Console.WriteLine($"総医師数: {doctorCounter(dataManager.Doctors)}");
+            Console.WriteLine($"割り当て済み患者: {assignedPatientCounter(dataManager.Patients)}");
+            Console.WriteLine($"未割り当て患者: {unassignedPatientCounter(dataManager.Patients)}");
+            Console.WriteLine($"総予約数: {dataManager.Appointments.Count}");
+
+            systemLogger("統計計算完了");
+            Utils.PressAnyKeyToContinue();
+        }
     }
 
-
     /// <summary>
-    /// 受付嬢メニューハンドラークラス（最小限機能）
+    /// 受付嬢メニューハンドラー
     /// </summary>
     public class ReceptionistMenuHandler : BaseMenuHandler
     {
-        public ReceptionistMenuHandler(DataManager dataManager) : base(dataManager) { }
+        protected override int LogoutOption => 5;
+        protected override int ExitOption => 6;
 
-        /// <summary>
-        /// 受付嬢メニューの選択処理
-        /// </summary>
-        public (bool logout, bool exit) HandleMenu(Receptionist receptionist, int choice)
+        protected override Dictionary<int, MenuAction> MenuActions { get; }
+
+        public ReceptionistMenuHandler(DataManager dataManager) : base(dataManager)
         {
-            switch (choice)
+            MenuActions = new Dictionary<int, MenuAction>
             {
-                case 1: // Register new patient
-                    RegisterNewPatient(receptionist);
-                    return (false, false);
-                case 2: // View existing patients
-                    ViewExistingPatients();
-                    return (false, false);
-                case 3: // View appointments
-                    ViewAppointments();
-                    return (false, false);
-                case 4: // Add new appointment
-                    AddNewAppointment(receptionist);
-                    return (false, false);
-                case 5: // Logout
-                case 6: // Exit
-                    return HandleCommonOptions(choice, 5, 6);
-                default:
-                    return HandleCommonOptions(choice, 5, 6);
-            }
+                { 1, user => RegisterNewPatient((Receptionist)user) },
+                { 2, user => ViewExistingPatients() },
+                { 3, user => ViewAppointments() },
+                { 4, user => AddNewAppointment((Receptionist)user) }
+            };
         }
 
-        /// <summary>
-        /// 機能1: 新規患者登録
-        /// </summary>
         private void RegisterNewPatient(Receptionist receptionist)
         {
             Utils.DisplayHeader("Register New Patient");
@@ -887,19 +828,13 @@ namespace Assignment1_hospital_management_system.SystemManager
             string email = Utils.GetStringInput("メールアドレス: ");
             string address = Utils.GetStringInput("住所: ");
 
-            // 受付嬢のメソッドを使用して患者を登録
             Patient newPatient = receptionist.RegisterNewPatient(firstName, lastName, phone, email, address);
-
-            // システムに患者を追加
             dataManager.AddPatient(newPatient);
 
             Console.WriteLine("患者登録が完了しました。");
             Utils.PressAnyKeyToContinue();
         }
 
-        /// <summary>
-        /// 機能2: 既存患者の閲覧
-        /// </summary>
         private void ViewExistingPatients()
         {
             Utils.DisplayHeader("View Existing Patients");
@@ -924,9 +859,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             Utils.PressAnyKeyToContinue();
         }
 
-        /// <summary>
-        /// 機能3: 予約一覧表示
-        /// </summary>
         private void ViewAppointments()
         {
             Utils.DisplayHeader("View Appointments");
@@ -957,9 +889,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             Utils.PressAnyKeyToContinue();
         }
 
-        /// <summary>
-        /// 機能4: 予約の追加
-        /// </summary>
         private void AddNewAppointment(Receptionist receptionist)
         {
             Utils.DisplayHeader("Add New Appointment");
@@ -1035,5 +964,4 @@ namespace Assignment1_hospital_management_system.SystemManager
             Utils.PressAnyKeyToContinue();
         }
     }
-
 }

@@ -26,13 +26,12 @@ namespace Assignment1_hospital_management_system.Models
         {
             if (_dataManager != null)
             {
-                Id = _dataManager.GenerateUniqueUserId();
+                Id = _dataManager.GenerateUniqueId(); 
             }
             else
             {
-                // Fallback - use old random generation method
-                Id = GenerateId();
-                Console.WriteLine($"Warning: Using fallback ID generation. ID: {Id}");
+                throw new InvalidOperationException(
+                    "DataManager must be set before creating User objects. Call User.SetDataManager() first.");
             }
         }
 
@@ -48,14 +47,9 @@ namespace Assignment1_hospital_management_system.Models
             Phone = phone;
         }
 
-        // Backward compatibility - old GenerateId method
-        protected virtual int GenerateId()
-        {
-            Random random = new Random();
-            return random.Next(10000, 99999);
-        }
 
-        // Other methods remain unchanged...
+        
+
         public abstract void ShowMainMenu();
         public abstract string GetUserType();
 

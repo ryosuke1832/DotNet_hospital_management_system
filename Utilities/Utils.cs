@@ -14,17 +14,6 @@ namespace Assignment1_hospital_management_system.Utilities
     {
         private static Random random = new Random();
 
-        // Generate unique ID for users and appointments
-        public static int GenerateId()
-        {
-            return random.Next(10000, 99999);
-        }
-
-        // Generate unique ID within a specific range
-        public static int GenerateId(int min, int max)
-        {
-            return random.Next(min, max);
-        }
 
         // Filter list of users by type
         public static List<T> FilterByType<T>(List<User> users) where T : User
@@ -204,5 +193,36 @@ namespace Assignment1_hospital_management_system.Utilities
             Console.WriteLine("2. 対応するパスワードを入力してください");
             Console.WriteLine();
         }
+        /// <summary>
+        /// 終了オプション付きパスワード入力
+        /// </summary>
+        public static string GetPasswordInputWithExit(string prompt)
+        {
+            Console.Write(prompt);
+            string password = "";
+            ConsoleKeyInfo key;
+
+            do
+            {
+                key = Console.ReadKey(true);
+
+                if (key.Key != ConsoleKey.Backspace && key.Key != ConsoleKey.Enter)
+                {
+                    password += key.KeyChar;
+                    Console.Write("*");
+                }
+                else if (key.Key == ConsoleKey.Backspace && password.Length > 0)
+                {
+                    password = password.Substring(0, password.Length - 1);
+                    Console.Write("\b \b");
+                }
+            }
+            while (key.Key != ConsoleKey.Enter);
+
+            Console.WriteLine();
+            return password;
+        }
+
+
     }
 }

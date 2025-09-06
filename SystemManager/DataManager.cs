@@ -13,6 +13,13 @@ namespace Assignment1_hospital_management_system.SystemManager
     /// </summary>
     public class DataManager
     {
+        private const string DEFAULT_ADMIN_PASSWORD = "admin1234";
+        private const string DEFAULT_ADMIN_EMAIL = "admin@hospital.com";
+
+
+        private HashSet<int> usedIds = new HashSet<int>();
+        private Random random = new Random();
+
         public List<Patient> Patients { get; private set; }
         public List<Doctor> Doctors { get; private set; }
         public List<Administrator> Administrators { get; private set; }
@@ -48,11 +55,61 @@ namespace Assignment1_hospital_management_system.SystemManager
             // Load existing data
             LoadAllData();
 
-            // Create sample data if needed
-            CreateSampleDataIfNeeded();
+            CreateDefaultAdminIfNeeded();
+
 
             Console.WriteLine("=== Data Manager initialized successfully ===");
         }
+
+        /// <summary>
+        /// デフォルトAdministratorを作成（Adminが存在しない場合のみ）
+        /// </summary>
+        private void CreateDefaultAdminIfNeeded()
+        {
+            // Administratorが1人も存在しない場合のみ作成
+            if (Administrators.Count == 0)
+            {
+                Console.WriteLine("No administrators found. Creating default administrator...");
+
+                // 通常のコンストラクタを使用（自動ID生成）
+                Administrator defaultAdmin = new Administrator("System", "Administrator")
+                {
+                    Email = DEFAULT_ADMIN_EMAIL,
+                    Phone = "0412345678",
+                    Address = "123 Admin Street, Sydney, NSW",
+                    Password = DEFAULT_ADMIN_PASSWORD,
+                    Department = "System Administration",
+                    AccessLevel = "Full Access"
+                };
+
+                // システムに追加
+                Administrators.Add(defaultAdmin);
+
+                // ファイルに即座に保存
+                SaveAllData();
+
+                Console.WriteLine("=== Default Administrator Created Successfully ===");
+                Console.WriteLine($"Name: {defaultAdmin.FirstName} {defaultAdmin.LastName}");
+                Console.WriteLine($"ID: {defaultAdmin.Id}"); // 自動生成されたID
+                Console.WriteLine($"Email: {defaultAdmin.Email}");
+                Console.WriteLine($"Password: {DEFAULT_ADMIN_PASSWORD}");
+                Console.WriteLine($"Department: {defaultAdmin.Department}");
+                Console.WriteLine("================================================");
+            }
+            else
+            {
+                Console.WriteLine($"Administrators already exist ({Administrators.Count} found). Skipping default admin creation.");
+
+                // 既存のAdmin情報を表示（デバッグ用）
+                foreach (var admin in Administrators)
+                {
+                    Console.WriteLine($"Existing Admin: {admin.FirstName} {admin.LastName} (ID: {admin.Id})");
+                }
+            }
+        }
+
+
+
 
         /// <summary>
         /// Load all data from files with comprehensive logging
@@ -79,6 +136,52 @@ namespace Assignment1_hospital_management_system.SystemManager
             {
                 Console.WriteLine($"Error loading data: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// ユーザーとアポイントメント両方で使用できる統一ID生成メソッド
+        /// </summary>
+        public int GenerateUniqueId()
+        {
+            int newId;
+            int maxAttempts = 1000;
+            int attempts = 0;
+
+            do
+            {
+                newId = random.Next(10000, 99999);
+                attempts++;
+
+                if (attempts >= maxAttempts)
+                {
+                    throw new InvalidOperationException("Failed to generate unique ID. System may be at capacity.");
+                }
+            }
+            while (usedIds.Contains(newId));
+
+            usedIds.Add(newId);
+            Console.WriteLine($"Generated unique ID: {newId}");
+            return newId;
+        }
+
+        /// <summary>
+        /// システム初期化時に既存IDを登録
+        /// </summary>
+        public void RegisterExistingIds()
+        {
+            // 既存のユーザーIDを登録
+            foreach (var patient in Patients)
+                usedIds.Add(patient.Id);
+            foreach (var doctor in Doctors)
+                usedIds.Add(doctor.Id);
+            foreach (var admin in Administrators)
+                usedIds.Add(admin.Id);
+            foreach (var receptionist in Receptionists)
+                usedIds.Add(receptionist.Id);
+
+            // 既存のアポイントメントIDを登録
+            foreach (var appointment in Appointments)
+                usedIds.Add(appointment.AppointmentId);
         }
 
         /// <summary>
@@ -190,60 +293,6 @@ namespace Assignment1_hospital_management_system.SystemManager
 
 
         /// <summary>
-        /// Create default admin and sample data if needed
-        /// </summary>
-        private void CreateSampleDataIfNeeded()
-        {
-            // Always ensure default admin exists
-            CreateDefaultAdminIfNeeded();
-
-            // Create sample data only if no data exists at all
-            if (Patients.Count == 0 && Doctors.Count == 0)
-            {
-                Console.WriteLine("No existing data found. Creating sample data for testing...");
-
-                // Create sample doctor
-                Doctor sampleDoctor = new Doctor("Jack", "Doctorson", "General Practice")
-                {
-                    Email = "jack@hospital.com",
-                    Phone = "0412333676",
-                    Address = "23 Real Street, Sydney, NSW",
-                    Password = "doctor123"
-                };
-                Doctors.Add(sampleDoctor);
-
-                // Create sample patient
-                Patient samplePatient = new Patient("David", "Patientson")
-                {
-                    Email = "davey67@gmail.com",
-                    Phone = "0412456876",
-                    Address = "19 Real Street, Sydney, NSW",
-                    Password = "patient123",
-                    MedicalHistory = "No significant medical history",
-                    AssignedDoctorId = sampleDoctor.Id
-                };
-                Patients.Add(samplePatient);
-
-                // Assign patient to doctor
-                sampleDoctor.AddPatient(samplePatient.Id);
-
-                // Create sample appointment
-                Appointment sampleAppointment = new Appointment(sampleDoctor.Id, samplePatient.Id, "Regular checkup with doctor");
-                Appointments.Add(sampleAppointment);
-
-                // Save sample data immediately
-                Console.WriteLine("Saving sample data to files...");
-                SaveAllData();
-
-                // Display sample data for testing
-                DisplaySampleDataInformation(sampleDoctor, samplePatient);
-            }
-            else
-            {
-                Console.WriteLine("Existing data found. Skipping sample data creation.");
-            }
-        }
-        /// <summary>
         /// 受付嬢をシステムに追加
         /// </summary>
         public void AddReceptionist(Receptionist receptionist)
@@ -260,42 +309,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             }
         }
 
-
-        /// <summary>
-        /// Create default administrator if none exists
-        /// </summary>
-        private void CreateDefaultAdminIfNeeded()
-        {
-            // Check if admin with ID 99999 already exists
-            if (!Administrators.Any(a => a.Id == 99999))
-            {
-                Console.WriteLine("Creating default administrator account...");
-
-                // Create admin without calling base constructor that generates random ID
-                Administrator defaultAdmin = new Administrator()
-                {
-                    FirstName = "System",
-                    LastName = "Administrator",
-                    Email = "admin@hospital.com",
-                    Phone = "0412345678",
-                    Address = "123 Admin Street, Sydney, NSW",
-                    Password = "admin1234",
-                    Department = "Administration",
-                    Id = 99999  // Set ID directly
-                };
-
-                Administrators.Add(defaultAdmin);
-
-                Console.WriteLine($"Default administrator created - ID: {defaultAdmin.Id}, Password: admin1234");
-
-                // Save immediately to ensure persistence
-                SaveAllData();
-            }
-            else
-            {
-                Console.WriteLine("Default administrator already exists.");
-            }
-        }
 
         /// <summary>
         /// Display sample data information for testing purposes

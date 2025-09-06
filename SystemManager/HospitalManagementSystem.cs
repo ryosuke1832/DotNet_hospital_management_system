@@ -22,8 +22,9 @@ namespace Assignment1_hospital_management_system.SystemManager
             // Initialize all system components
             dataManager = new DataManager();
 
-            // DataManagerをUserクラスに設定
+
             User.SetDataManager(dataManager);
+            Appointment.SetDataManager(dataManager);
 
             authService = new AuthenticationService(dataManager);
             menuController = new MenuController(dataManager);
@@ -55,17 +56,19 @@ namespace Assignment1_hospital_management_system.SystemManager
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"システムエラー: {ex.Message}");
-                Console.WriteLine($"詳細: {ex.StackTrace}");
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine($"Detail: {ex.StackTrace}");
                 Utils.PressAnyKeyToContinue();
             }
         }
 
         private void InitializeSystem()
         {
-            Console.WriteLine("DOTNET Hospital Management System を初期化しています...");
+            Console.WriteLine("DOTNET Hospital Management System Initializing");
             dataManager.Initialize();
-            Console.WriteLine("システム初期化が完了しました！");
+            dataManager.RegisterExistingIds(); 
+
+
             System.Threading.Thread.Sleep(1000);
         }
 
