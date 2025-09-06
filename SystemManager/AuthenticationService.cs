@@ -33,9 +33,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             Console.WriteLine("4. システムを終了する場合は 'exit' と入力してください");
             Console.WriteLine();
 
-            // 利用可能なアカウント情報を表示
-            DisplayAvailableAccounts();
-
             Console.WriteLine();
             Console.WriteLine("=== ログイン ===");
 
@@ -82,60 +79,6 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Utils.PressAnyKeyToContinue();
                 return false; // ログイン画面に戻る
             }
-        }
-
-        /// <summary>
-        /// 利用可能なアカウント情報を表示
-        /// </summary>
-        private void DisplayAvailableAccounts()
-        {
-            Console.WriteLine("=== 利用可能なテストアカウント ===");
-
-            // Administrator情報
-            if (dataManager.Administrators.Count > 0)
-            {
-                Console.WriteLine("【管理者アカウント】");
-                foreach (var admin in dataManager.Administrators)
-                {
-                    Console.WriteLine($"  ID: {admin.Id} | 名前: {admin.FirstName} {admin.LastName} | パスワード: {admin.Password}");
-                }
-                Console.WriteLine();
-            }
-
-            // Doctor情報
-            if (dataManager.Doctors.Count > 0)
-            {
-                Console.WriteLine("【医師アカウント】");
-                foreach (var doctor in dataManager.Doctors)
-                {
-                    Console.WriteLine($"  ID: {doctor.Id} | 名前: Dr. {doctor.FirstName} {doctor.LastName} | パスワード: {doctor.Password}");
-                }
-                Console.WriteLine();
-            }
-
-            // Patient情報
-            if (dataManager.Patients.Count > 0)
-            {
-                Console.WriteLine("【患者アカウント】");
-                foreach (var patient in dataManager.Patients)
-                {
-                    Console.WriteLine($"  ID: {patient.Id} | 名前: {patient.FirstName} {patient.LastName} | パスワード: {patient.Password}");
-                }
-                Console.WriteLine();
-            }
-
-            // Receptionist情報
-            if (dataManager.Receptionists.Count > 0)
-            {
-                Console.WriteLine("【受付アカウント】");
-                foreach (var receptionist in dataManager.Receptionists)
-                {
-                    Console.WriteLine($"  ID: {receptionist.Id} | 名前: {receptionist.FirstName} {receptionist.LastName} | パスワード: {receptionist.Password}");
-                }
-                Console.WriteLine();
-            }
-
-            Console.WriteLine("================================");
         }
 
         /// <summary>

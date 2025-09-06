@@ -55,60 +55,233 @@ namespace Assignment1_hospital_management_system.SystemManager
             // Load existing data
             LoadAllData();
 
-            CreateDefaultAdminIfNeeded();
+            CreateSampleDataIfNeeded();
 
 
             Console.WriteLine("=== Data Manager initialized successfully ===");
         }
-
         /// <summary>
-        /// デフォルトAdministratorを作成（Adminが存在しない場合のみ）
+        /// システム初期化時にサンプルデータを作成（データが存在しない場合のみ）
         /// </summary>
-        private void CreateDefaultAdminIfNeeded()
+        private void CreateSampleDataIfNeeded()
         {
-            // Administratorが1人も存在しない場合のみ作成
+            Console.WriteLine("=== サンプルデータ作成チェック ===");
+
+            bool dataCreated = false;
+
+            // 1. Administrator作成
             if (Administrators.Count == 0)
             {
-                Console.WriteLine("No administrators found. Creating default administrator...");
+                CreateDefaultAdmin();
+                dataCreated = true;
+            }
 
-                // 通常のコンストラクタを使用（自動ID生成）
-                Administrator defaultAdmin = new Administrator("System", "Administrator")
-                {
-                    Email = DEFAULT_ADMIN_EMAIL,
-                    Phone = "0412345678",
-                    Address = "123 Admin Street, Sydney, NSW",
-                    Password = DEFAULT_ADMIN_PASSWORD,
-                    Department = "System Administration",
-                    AccessLevel = "Full Access"
-                };
+            // 2. Doctor作成
+            if (Doctors.Count == 0)
+            {
+                CreateSampleDoctors();
+                dataCreated = true;
+            }
 
-                // システムに追加
-                Administrators.Add(defaultAdmin);
+            // 3. Patient作成
+            if (Patients.Count == 0)
+            {
+                CreateSamplePatients();
+                dataCreated = true;
+            }
 
-                // ファイルに即座に保存
+            // 4. Receptionist作成
+            if (Receptionists.Count == 0)
+            {
+                CreateSampleReceptionists();
+                dataCreated = true;
+            }
+
+            // 5. Appointment作成（すべてのユーザーが作成された後）
+            if (Appointments.Count == 0 && Doctors.Count > 0 && Patients.Count > 0)
+            {
+                CreateSampleAppointments();
+                dataCreated = true;
+            }
+
+            // データが作成された場合は即座に保存
+            if (dataCreated)
+            {
                 SaveAllData();
-
-                Console.WriteLine("=== Default Administrator Created Successfully ===");
-                Console.WriteLine($"Name: {defaultAdmin.FirstName} {defaultAdmin.LastName}");
-                Console.WriteLine($"ID: {defaultAdmin.Id}"); // 自動生成されたID
-                Console.WriteLine($"Email: {defaultAdmin.Email}");
-                Console.WriteLine($"Password: {DEFAULT_ADMIN_PASSWORD}");
-                Console.WriteLine($"Department: {defaultAdmin.Department}");
-                Console.WriteLine("================================================");
             }
             else
             {
-                Console.WriteLine($"Administrators already exist ({Administrators.Count} found). Skipping default admin creation.");
+                Console.WriteLine("既存データが見つかりました。サンプルデータの作成をスキップします。");
+            }
 
-                // 既存のAdmin情報を表示（デバッグ用）
-                foreach (var admin in Administrators)
+            Console.WriteLine("=== サンプルデータ作成完了 ===");
+        }
+
+        /// <summary>
+        /// デフォルトAdministrator作成
+        /// </summary>
+        private void CreateDefaultAdmin()
+        {
+            Console.WriteLine("デフォルト管理者を作成中...");
+
+            Administrator defaultAdmin = new Administrator("System", "Administrator")
+            {
+                Email = "admin@hospital.com",
+                Phone = "0412345678",
+                Address = "123 Admin Street, Sydney, NSW",
+                Password = "admin1234",
+                Department = "System Administration",
+                AccessLevel = "Full Access"
+            };
+
+            Administrators.Add(defaultAdmin);
+            Console.WriteLine($"管理者作成完了: {defaultAdmin.FirstName} {defaultAdmin.LastName} (ID: {defaultAdmin.Id})");
+        }
+
+        /// <summary>
+        /// サンプルDoctor作成
+        /// </summary>
+        private void CreateSampleDoctors()
+        {
+            Console.WriteLine("サンプル医師を作成中...");
+
+            var sampleDoctors = new[]
+            {
+        new { FirstName = "John", LastName = "Smith", Specialization = "Cardiology", Email = "john.smith@hospital.com", Phone = "0423456789" },
+        new { FirstName = "Sarah", LastName = "Johnson", Specialization = "Pediatrics", Email = "sarah.johnson@hospital.com", Phone = "0434567890" }
+    };
+
+            foreach (var doctorData in sampleDoctors)
+            {
+                Doctor doctor = new Doctor(doctorData.FirstName, doctorData.LastName, doctorData.Specialization)
                 {
-                    Console.WriteLine($"Existing Admin: {admin.FirstName} {admin.LastName} (ID: {admin.Id})");
-                }
+                    Email = doctorData.Email,
+                    Phone = doctorData.Phone,
+                    Address = "456 Medical Plaza, Sydney, NSW",
+                    Password = "doctor123"
+                };
+
+                Doctors.Add(doctor);
+                Console.WriteLine($"医師作成完了: Dr. {doctor.FirstName} {doctor.LastName} (ID: {doctor.Id}) - {doctor.Specialization}");
             }
         }
 
+        /// <summary>
+        /// サンプルPatient作成
+        /// </summary>
+        private void CreateSamplePatients()
+        {
+            Console.WriteLine("サンプル患者を作成中...");
 
+            var samplePatients = new[]
+            {
+        new { FirstName = "Mike", LastName = "Wilson", Email = "mike.wilson@email.com", Phone = "0445678901", MedicalHistory = "No significant medical history" },
+        new { FirstName = "Emily", LastName = "Brown", Email = "emily.brown@email.com", Phone = "0456789012", MedicalHistory = "Allergic to penicillin" },
+        new { FirstName = "David", LastName = "Taylor", Email = "david.taylor@email.com", Phone = "0467890123", MedicalHistory = "Diabetes Type 2" }
+    };
+
+            foreach (var patientData in samplePatients)
+            {
+                Patient patient = new Patient(patientData.FirstName, patientData.LastName)
+                {
+                    Email = patientData.Email,
+                    Phone = patientData.Phone,
+                    Address = "789 Residential Ave, Sydney, NSW",
+                    Password = "patient123",
+                    MedicalHistory = patientData.MedicalHistory
+                };
+
+                Patients.Add(patient);
+                Console.WriteLine($"患者作成完了: {patient.FirstName} {patient.LastName} (ID: {patient.Id})");
+            }
+        }
+
+        /// <summary>
+        /// サンプルReceptionist作成
+        /// </summary>
+        private void CreateSampleReceptionists()
+        {
+            Console.WriteLine("サンプル受付嬢を作成中...");
+
+            var sampleReceptionists = new[]
+            {
+        new { FirstName = "Lisa", LastName = "Anderson", Email = "lisa.anderson@hospital.com", Phone = "0478901234", Shift = "Morning" },
+        new { FirstName = "Anna", LastName = "Martinez", Email = "anna.martinez@hospital.com", Phone = "0489012345", Shift = "Evening" }
+    };
+
+            foreach (var receptionistData in sampleReceptionists)
+            {
+                Receptionist receptionist = new Receptionist(receptionistData.FirstName, receptionistData.LastName)
+                {
+                    Email = receptionistData.Email,
+                    Phone = receptionistData.Phone,
+                    Address = "321 Hospital Building, Sydney, NSW",
+                    Password = "reception123",
+                };
+
+                Receptionists.Add(receptionist);
+                Console.WriteLine($"受付嬢作成完了: {receptionist.FirstName} {receptionist.LastName} (ID: {receptionist.Id})");
+            }
+        }
+
+        /// <summary>
+        /// サンプルAppointment作成
+        /// </summary>
+        private void CreateSampleAppointments()
+        {
+            Console.WriteLine("サンプル予約を作成中...");
+
+            if (Doctors.Count == 0 || Patients.Count == 0)
+            {
+                Console.WriteLine("医師または患者が存在しないため、予約を作成できません。");
+                return;
+            }
+
+            // 最初の医師に最初の患者を割り当て
+            if (Patients.Count > 0 && Doctors.Count > 0)
+            {
+                Patient firstPatient = Patients[0];
+                Doctor firstDoctor = Doctors[0];
+
+                firstPatient.AssignedDoctorId = firstDoctor.Id;
+                firstDoctor.AddPatient(firstPatient.Id);
+
+                // 予約作成
+                Appointment appointment1 = new Appointment(firstDoctor.Id, firstPatient.Id, "Regular health checkup");
+                Appointments.Add(appointment1);
+                Console.WriteLine($"予約作成完了: Dr. {firstDoctor.FirstName} {firstDoctor.LastName} と {firstPatient.FirstName} {firstPatient.LastName} (予約ID: {appointment1.AppointmentId})");
+            }
+
+            // 2番目の医師に2番目の患者を割り当て（存在する場合）
+            if (Patients.Count > 1 && Doctors.Count > 1)
+            {
+                Patient secondPatient = Patients[1];
+                Doctor secondDoctor = Doctors[1];
+
+                secondPatient.AssignedDoctorId = secondDoctor.Id;
+                secondDoctor.AddPatient(secondPatient.Id);
+
+                // 予約作成
+                Appointment appointment2 = new Appointment(secondDoctor.Id, secondPatient.Id, "Pediatric consultation");
+                Appointments.Add(appointment2);
+                Console.WriteLine($"予約作成完了: Dr. {secondDoctor.FirstName} {secondDoctor.LastName} と {secondPatient.FirstName} {secondPatient.LastName} (予約ID: {appointment2.AppointmentId})");
+            }
+
+            // 3番目の患者を1番目の医師に割り当て（存在する場合）
+            if (Patients.Count > 2 && Doctors.Count > 0)
+            {
+                Patient thirdPatient = Patients[2];
+                Doctor firstDoctor = Doctors[0];
+
+                thirdPatient.AssignedDoctorId = firstDoctor.Id;
+                firstDoctor.AddPatient(thirdPatient.Id);
+
+                // 予約作成
+                Appointment appointment3 = new Appointment(firstDoctor.Id, thirdPatient.Id, "Diabetes management consultation");
+                Appointments.Add(appointment3);
+                Console.WriteLine($"予約作成完了: Dr. {firstDoctor.FirstName} {firstDoctor.LastName} と {thirdPatient.FirstName} {thirdPatient.LastName} (予約ID: {appointment3.AppointmentId})");
+            }
+        }
 
 
         /// <summary>
