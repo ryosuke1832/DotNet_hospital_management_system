@@ -43,8 +43,10 @@ namespace Assignment1_hospital_management_system.Models
             Console.WriteLine("5. Add doctor");
             Console.WriteLine("6. Add patient");
             Console.WriteLine("7. Add receptionist");
-            Console.WriteLine("8. Logout");
-            Console.WriteLine("9. Exit");
+            Console.WriteLine("8. Show filtered patients"); 
+            Console.WriteLine("9. Show system statistics");
+            Console.WriteLine("10. Logout");
+            Console.WriteLine("11. Exit");
             Console.WriteLine("========================================");
         }
 

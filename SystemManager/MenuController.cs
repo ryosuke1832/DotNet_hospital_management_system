@@ -30,6 +30,73 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
+        /// デリゲートと匿名メソッドを使用した患者検索機能
+        /// 既存のShowAllPatients()メソッドを拡張
+        /// </summary>
+        public void ShowFilteredPatients()
+        {
+            Utils.DisplayHeader("患者フィルタリング");
+
+            Console.WriteLine("フィルタオプション:");
+            Console.WriteLine("1. 医師が割り当て済みの患者");
+            Console.WriteLine("2. メールアドレスが設定済みの患者");
+            Console.WriteLine("3. 全ての患者");
+
+            int choice = Utils.GetIntegerInput("選択してください: ");
+
+            // デリゲートと匿名メソッドの使用例
+            Delegates.UserFilter<Patient> filter = null;
+
+            switch (choice)
+            {
+                case 1:
+                    // 匿名メソッド例1
+                    filter = delegate (Patient p) { return p.AssignedDoctorId.HasValue; };
+                    break;
+                case 2:
+                    // 匿名メソッド例2（ラムダ式も使用可能）
+                    filter = delegate (Patient p) { return !string.IsNullOrEmpty(p.Email); };
+                    break;
+                case 3:
+                    // 匿名メソッド例3
+                    filter = delegate (Patient p) { return true; };
+                    break;
+                default:
+                    Console.WriteLine("無効な選択です。");
+                    Utils.PressAnyKeyToContinue();
+                    return;
+            }
+
+            // フィルタリング実行
+            var filteredPatients = Delegates.FilterUsers(dataManager.Patients, filter);
+
+            // ログ用デリゲートの使用例
+            Delegates.LogAction logger = delegate (string message)
+            {
+                Console.WriteLine($"[ログ] {DateTime.Now:HH:mm:ss} - {message}");
+            };
+
+            // フォーマット用デリゲートの使用例
+            Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
+            {
+                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
+                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "未割り当て";
+                return $"{p.FirstName} {p.LastName} | 担当医: {doctorName} | Email: {p.Email}";
+            };
+
+            // 実行とログ記録
+            Delegates.ExecuteWithLogging("患者一覧表示", logger, delegate ()
+            {
+                Console.WriteLine($"\nフィルタ結果: {filteredPatients.Count}人の患者");
+                Console.WriteLine("".PadRight(70, '-'));
+                Delegates.DisplayUsers(filteredPatients, formatter);
+            });
+
+            Utils.PressAnyKeyToContinue();
+        }
+
+
+        /// <summary>
         /// Show appropriate menu based on user type
         /// </summary>
         public bool ShowUserMenu(User currentUser)
@@ -447,14 +514,136 @@ namespace Assignment1_hospital_management_system.SystemManager
                 case 7: // Add receptionist - 新しく追加
                     AddReceptionist();
                     return (false, false);
-                case 8: // Logout
-                case 9: // Exit
-                    return HandleCommonOptions(choice, 7, 8);
-                default:
-                    return HandleCommonOptions(choice, 7, 8);
+                case 8: // Show filtered patients
+                    ShowFilteredPatients();
+                    return (false, false);
+                case 9: // Show system statistics
+                    ShowSystemStatisticsWithDelegates();
+                    return (false, false);
+                case 10: // Logout
+                case 11: // Exit 
+                    return HandleCommonOptions(choice, 10, 11);
+                default: // 
+                    return HandleCommonOptions(choice, 10, 11);
+
             }
         }
 
+        /// <summary>
+        /// デリゲートを使用したシステム統計表示
+        /// </summary>
+        private void ShowSystemStatisticsWithDelegates()
+        {
+            Utils.DisplayHeader("システム統計 (デリゲート使用)");
+
+            // 統計計算用のデリゲート定義
+            Func<List<Patient>, int> patientCounter = delegate (List<Patient> patients)
+            {
+                return patients.Count;
+            };
+
+            Func<List<Doctor>, int> doctorCounter = delegate (List<Doctor> doctors)
+            {
+                return doctors.Count;
+            };
+
+            // 条件付きカウント用の匿名メソッド
+            Func<List<Patient>, int> assignedPatientCounter = delegate (List<Patient> patients)
+            {
+                return patients.Count(p => p.AssignedDoctorId.HasValue);
+            };
+
+            Func<List<Patient>, int> unassignedPatientCounter = delegate (List<Patient> patients)
+            {
+                return patients.Count(p => !p.AssignedDoctorId.HasValue);
+            };
+
+            // ログ用デリゲート
+            Action<string> systemLogger = delegate (string message)
+            {
+                Console.WriteLine($"[システム] {message}");
+            };
+
+            // 統計情報の表示
+            systemLogger("システム統計を計算中...");
+
+            Console.WriteLine($"総患者数: {patientCounter(dataManager.Patients)}");
+            Console.WriteLine($"総医師数: {doctorCounter(dataManager.Doctors)}");
+            Console.WriteLine($"割り当て済み患者: {assignedPatientCounter(dataManager.Patients)}");
+            Console.WriteLine($"未割り当て患者: {unassignedPatientCounter(dataManager.Patients)}");
+            Console.WriteLine($"総予約数: {dataManager.Appointments.Count}");
+
+            systemLogger("統計計算完了");
+            Utils.PressAnyKeyToContinue();
+        }
+
+        /// <summary>
+        /// デリゲートと匿名メソッドを使用した患者検索機能
+        /// 既存のShowAllPatients()メソッドを拡張
+        /// </summary>
+        public void ShowFilteredPatients()
+        {
+            Utils.DisplayHeader("患者フィルタリング");
+
+            Console.WriteLine("フィルタオプション:");
+            Console.WriteLine("1. 医師が割り当て済みの患者");
+            Console.WriteLine("2. メールアドレスが設定済みの患者");
+            Console.WriteLine("3. 全ての患者");
+
+            int choice = Utils.GetIntegerInput("選択してください: ");
+
+            // デリゲートと匿名メソッドの使用例
+            Delegates.UserFilter<Patient> filter = null;
+
+            switch (choice)
+            {
+                case 1:
+                    // 匿名メソッド例1
+                    filter = delegate (Patient p) { return p.AssignedDoctorId.HasValue; };
+                    break;
+                case 2:
+                    // 匿名メソッド例2（ラムダ式も使用可能）
+                    filter = delegate (Patient p) { return !string.IsNullOrEmpty(p.Email); };
+                    break;
+                case 3:
+                    // 匿名メソッド例3
+                    filter = delegate (Patient p) { return true; };
+                    break;
+                default:
+                    Console.WriteLine("無効な選択です。");
+                    Utils.PressAnyKeyToContinue();
+                    return;
+            }
+
+            // フィルタリング実行
+            var filteredPatients = Delegates.FilterUsers(dataManager.Patients, filter);
+
+            // ログ用デリゲートの使用例
+            Delegates.LogAction logger = delegate (string message)
+            {
+                Console.WriteLine($"[ログ] {DateTime.Now:HH:mm:ss} - {message}");
+            };
+
+            // フォーマット用デリゲートの使用例
+            Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
+            {
+                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
+                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "未割り当て";
+                return $"{p.FirstName} {p.LastName} | 担当医: {doctorName} | Email: {p.Email}";
+            };
+
+            // 実行とログ記録
+            Delegates.ExecuteWithLogging("患者一覧表示", logger, delegate ()
+            {
+                Console.WriteLine($"\nフィルタ結果: {filteredPatients.Count}人の患者");
+                Console.WriteLine("".PadRight(70, '-'));
+                Delegates.DisplayUsers(filteredPatients, formatter);
+            });
+
+            Utils.PressAnyKeyToContinue();
+        }
+       
+        
         private void ShowAllDoctors()
         {
             Utils.DisplayHeader("All Doctors");
@@ -630,7 +819,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Email = email,
                 Phone = phone,
                 Address = address,
-                Password = "reception123" // デフォルトパスワード
+                Password = "reception123"
             };
 
             // システムに追加
@@ -644,7 +833,12 @@ namespace Assignment1_hospital_management_system.SystemManager
             Utils.PressAnyKeyToContinue();
         }
 
+
+       
+
+
     }
+
 
     /// <summary>
     /// 受付嬢メニューハンドラークラス（最小限機能）
