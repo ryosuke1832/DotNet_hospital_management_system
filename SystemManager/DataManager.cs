@@ -18,6 +18,8 @@ namespace Assignment1_hospital_management_system.SystemManager
         public List<Administrator> Administrators { get; private set; }
         public List<Appointment> Appointments { get; private set; }
 
+        public List<Receptionist> Receptionists { get; private set; }
+
         /// <summary>
         /// Constructor - initializes empty collections
         /// </summary>
@@ -27,6 +29,7 @@ namespace Assignment1_hospital_management_system.SystemManager
             Doctors = new List<Doctor>();
             Administrators = new List<Administrator>();
             Appointments = new List<Appointment>();
+            Receptionists = new List<Receptionist>();
         }
 
         /// <summary>
@@ -64,6 +67,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Doctors = FileManager.LoadDoctors();
                 Administrators = FileManager.LoadAdministrators();
                 Appointments = FileManager.LoadAppointments();
+                Receptionists = FileManager.LoadReceptionists();
 
                 Console.WriteLine($"Data loading summary:");
                 Console.WriteLine($"- Patients: {Patients.Count}");
@@ -76,6 +80,53 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Console.WriteLine($"Error loading data: {ex.Message}");
             }
         }
+
+        /// <summary>
+        /// システムのメモリ使用量を表示し、ガベージコレクションを実行するメソッド
+        /// 課題要件「ガベージコレクションの例」を満たすためのメソッド
+        /// </summary>
+        public void ShowMemoryUsageAndCleanup()
+        {
+            try
+            {
+                Console.WriteLine("=== メモリ使用状況とガベージコレクション ===");
+
+                // ガベージコレクション実行前のメモリ使用量
+                long memoryBefore = GC.GetTotalMemory(false);
+                Console.WriteLine($"ガベージコレクション前のメモリ使用量: {memoryBefore / 1024:N0} KB");
+                Console.WriteLine($"Generation 0 collections: {GC.CollectionCount(0)}");
+                Console.WriteLine($"Generation 1 collections: {GC.CollectionCount(1)}");
+                Console.WriteLine($"Generation 2 collections: {GC.CollectionCount(2)}");
+
+                // 明示的にガベージコレクションを実行
+                Console.WriteLine("ガベージコレクションを実行中...");
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
+
+                // ガベージコレクション実行後のメモリ使用量
+                long memoryAfter = GC.GetTotalMemory(true);
+                Console.WriteLine($"ガベージコレクション後のメモリ使用量: {memoryAfter / 1024:N0} KB");
+
+                long memoryFreed = memoryBefore - memoryAfter;
+                if (memoryFreed > 0)
+                {
+                    Console.WriteLine($"解放されたメモリ: {memoryFreed / 1024:N0} KB");
+                }
+                else
+                {
+                    Console.WriteLine("現在、解放可能な未使用メモリはありません");
+                }
+
+                Console.WriteLine("=== メモリクリーンアップ完了 ===");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"メモリ管理中にエラーが発生しました: {ex.Message}");
+            }
+        }
+
+
 
         /// <summary>
         /// Generate unique user ID that doesn't conflict with existing users
@@ -127,7 +178,7 @@ namespace Assignment1_hospital_management_system.SystemManager
             try
             {
                 Console.WriteLine("Saving all data to files...");
-                FileManager.SaveAllData(Patients, Doctors, Administrators, Appointments);
+                FileManager.SaveAllData(Patients, Doctors, Administrators, Appointments,Receptionists);
                 Console.WriteLine("Data save operation completed.");
             }
             catch (Exception ex)
@@ -192,6 +243,23 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Console.WriteLine("Existing data found. Skipping sample data creation.");
             }
         }
+        /// <summary>
+        /// 受付嬢をシステムに追加
+        /// </summary>
+        public void AddReceptionist(Receptionist receptionist)
+        {
+            if (receptionist != null)
+            {
+                Receptionists.Add(receptionist);
+                Console.WriteLine($"Receptionist {receptionist.FirstName} {receptionist.LastName} (ID: {receptionist.Id}) added to system");
+                SaveAllData();
+            }
+            else
+            {
+                Console.WriteLine("Error: Cannot add null receptionist");
+            }
+        }
+
 
         /// <summary>
         /// Create default administrator if none exists
@@ -213,7 +281,6 @@ namespace Assignment1_hospital_management_system.SystemManager
                     Address = "123 Admin Street, Sydney, NSW",
                     Password = "admin1234",
                     Department = "Administration",
-                    AccessLevel = "Full Access",
                     Id = 99999  // Set ID directly
                 };
 
@@ -328,6 +395,13 @@ namespace Assignment1_hospital_management_system.SystemManager
             if (user != null)
             {
                 Console.WriteLine($"Administrator login successful: {user.FirstName} {user.LastName}");
+                return user;
+            }
+
+            user = Receptionists.FirstOrDefault(r => r.Id == id && r.Password == password);
+            if (user != null)
+            {
+                Console.WriteLine($"Receptionist login successful: {user.FirstName} {user.LastName}");
                 return user;
             }
 

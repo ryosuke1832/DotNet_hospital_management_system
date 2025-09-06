@@ -36,7 +36,6 @@ namespace Assignment1_hospital_management_system.Models
             }
         }
 
-        // 既存のコンストラクタ...
         public User(string firstName, string lastName) : this()
         {
             FirstName = firstName;

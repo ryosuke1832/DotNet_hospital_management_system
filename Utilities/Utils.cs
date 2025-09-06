@@ -200,9 +200,8 @@ namespace Assignment1_hospital_management_system.Utilities
         {
             Console.WriteLine();
             Console.WriteLine("ログイン方法:");
-            Console.WriteLine("1. 上記のテストユーザーIDを入力してください");
+            Console.WriteLine("1. ユーザーIDを入力してください");
             Console.WriteLine("2. 対応するパスワードを入力してください");
-            Console.WriteLine("3. パスワードは画面上で'*'として表示されます");
             Console.WriteLine();
         }
     }

@@ -109,6 +109,8 @@ namespace Assignment1_hospital_management_system.SystemManager
         private void Shutdown()
         {
             dataManager.SaveAllData();
+            Console.WriteLine("システム終了前のクリーンアップを実行中...");
+            dataManager.ShowMemoryUsageAndCleanup();
             Console.WriteLine("DOTNET Hospital Management System をご利用いただき、ありがとうございました！");
             Console.WriteLine("何かキーを押して終了してください...");
             Console.ReadKey();

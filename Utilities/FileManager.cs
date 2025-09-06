@@ -37,6 +37,7 @@ namespace Assignment1_hospital_management_system.Utilities
         public static readonly string DOCTORS_FILE = Path.Combine(DATA_FOLDER, "doctors.txt");
         public static readonly string ADMINISTRATORS_FILE = Path.Combine(DATA_FOLDER, "administrators.txt");
         public static readonly string APPOINTMENTS_FILE = Path.Combine(DATA_FOLDER, "appointments.txt");
+        public static readonly string RECEPTIONISTS_FILE = Path.Combine(DATA_FOLDER, "receptionists.txt");
 
         /// <summary>
         /// Initialize data files and create Data folder if they don't exist
@@ -64,6 +65,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 CreateFileIfNotExists(DOCTORS_FILE);
                 CreateFileIfNotExists(ADMINISTRATORS_FILE);
                 CreateFileIfNotExists(APPOINTMENTS_FILE);
+                CreateFileIfNotExists(RECEPTIONISTS_FILE);
 
                 Console.WriteLine("Data files initialization completed.");
             }
@@ -407,6 +409,102 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
+        /// 受付嬢データをファイルに保存
+        /// </summary>
+        public static void SaveReceptionists(List<Receptionist> receptionists)
+        {
+            try
+            {
+                List<string> lines = new List<string>();
+                foreach (Receptionist receptionist in receptionists)
+                {
+                    // Format: ID,FirstName,LastName,Email,Phone,Address,Password,Department,Shift
+                    string line = $"{receptionist.Id},{EscapeCommas(receptionist.FirstName)},{EscapeCommas(receptionist.LastName)},{EscapeCommas(receptionist.Email)},{EscapeCommas(receptionist.Phone)},{EscapeCommas(receptionist.Address)},{EscapeCommas(receptionist.Password)},{EscapeCommas(receptionist.Department)},{EscapeCommas(receptionist.Shift)}";
+                    lines.Add(line);
+                }
+                File.WriteAllLines(RECEPTIONISTS_FILE, lines);
+                Console.WriteLine($"Successfully saved {receptionists.Count} receptionists to {RECEPTIONISTS_FILE}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving receptionists: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// ファイルから受付嬢データを読み込み
+        /// </summary>
+        public static List<Receptionist> LoadReceptionists()
+        {
+            List<Receptionist> receptionists = new List<Receptionist>();
+            try
+            {
+                if (File.Exists(RECEPTIONISTS_FILE))
+                {
+                    string[] lines = File.ReadAllLines(RECEPTIONISTS_FILE);
+                    Console.WriteLine($"Reading {lines.Length} lines from {RECEPTIONISTS_FILE}");
+
+                    foreach (string line in lines)
+                    {
+                        if (!string.IsNullOrWhiteSpace(line))
+                        {
+                            Receptionist receptionist = ParseReceptionistFromLine(line);
+                            if (receptionist != null)
+                            {
+                                receptionists.Add(receptionist);
+                            }
+                        }
+                    }
+                    Console.WriteLine($"Successfully loaded {receptionists.Count} receptionists from {RECEPTIONISTS_FILE}");
+                }
+                else
+                {
+                    Console.WriteLine($"Receptionists file not found: {RECEPTIONISTS_FILE} - will be created when needed");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading receptionists: {ex.Message}");
+            }
+            return receptionists;
+        }
+
+        /// <summary>
+        /// ファイル行から受付嬢オブジェクトを解析
+        /// </summary>
+        private static Receptionist ParseReceptionistFromLine(string line)
+        {
+            try
+            {
+                string[] parts = line.Split(',');
+                if (parts.Length >= 9)
+                {
+                    return new Receptionist
+                    {
+                        Id = int.Parse(parts[0]),
+                        FirstName = UnescapeCommas(parts[1]),
+                        LastName = UnescapeCommas(parts[2]),
+                        Email = UnescapeCommas(parts[3]),
+                        Phone = UnescapeCommas(parts[4]),
+                        Address = UnescapeCommas(parts[5]),
+                        Password = UnescapeCommas(parts[6]),
+                        Department = UnescapeCommas(parts[7]),
+                        Shift = UnescapeCommas(parts[8])
+                    };
+                }
+                else
+                {
+                    Console.WriteLine($"Invalid receptionist data format: {line}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing receptionist data: {ex.Message} - Line: {line}");
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Save appointments to file
         /// </summary>
         public static void SaveAppointments(List<Appointment> appointments)
@@ -468,13 +566,14 @@ namespace Assignment1_hospital_management_system.Utilities
         /// <summary>
         /// Save all data to files with comprehensive logging
         /// </summary>
-        public static void SaveAllData(List<Patient> patients, List<Doctor> doctors, List<Administrator> administrators, List<Appointment> appointments)
+        public static void SaveAllData(List<Patient> patients, List<Doctor> doctors, List<Administrator> administrators, List<Appointment> appointments, List<Receptionist> receptionists)
         {
             Console.WriteLine("=== Saving all data to files ===");
             SavePatients(patients);
             SaveDoctors(doctors);
             SaveAdministrators(administrators);
             SaveAppointments(appointments);
+            SaveReceptionists(receptionists);
             Console.WriteLine("=== All data saved successfully! ===");
         }
 
@@ -515,6 +614,7 @@ namespace Assignment1_hospital_management_system.Utilities
             Console.WriteLine($"Doctors File: {DOCTORS_FILE} - Exists: {File.Exists(DOCTORS_FILE)}");
             Console.WriteLine($"Administrators File: {ADMINISTRATORS_FILE} - Exists: {File.Exists(ADMINISTRATORS_FILE)}");
             Console.WriteLine($"Appointments File: {APPOINTMENTS_FILE} - Exists: {File.Exists(APPOINTMENTS_FILE)}");
+            Console.WriteLine($"Receptionists File: {RECEPTIONISTS_FILE} - Exists: {File.Exists(RECEPTIONISTS_FILE)}");
             Console.WriteLine("=============================");
         }
     }

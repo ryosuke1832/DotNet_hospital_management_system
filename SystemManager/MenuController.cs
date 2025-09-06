@@ -18,6 +18,7 @@ namespace Assignment1_hospital_management_system.SystemManager
         private PatientMenuHandler patientMenu;
         private DoctorMenuHandler doctorMenu;
         private AdminMenuHandler adminMenu;
+        private ReceptionistMenuHandler receptionistMenu;
 
         public MenuController(DataManager dataManager)
         {
@@ -25,6 +26,7 @@ namespace Assignment1_hospital_management_system.SystemManager
             this.patientMenu = new PatientMenuHandler(dataManager);
             this.doctorMenu = new DoctorMenuHandler(dataManager);
             this.adminMenu = new AdminMenuHandler(dataManager);
+            this.receptionistMenu = new ReceptionistMenuHandler(dataManager);
         }
 
         /// <summary>
@@ -59,6 +61,11 @@ namespace Assignment1_hospital_management_system.SystemManager
                             var adminResult = adminMenu.HandleMenu((Administrator)currentUser, choice);
                             logout = adminResult.logout;
                             exitSystem = adminResult.exit;
+                            break;
+                        case "Receptionist": 
+                            var receptionistResult = receptionistMenu.HandleMenu((Receptionist)currentUser, choice);
+                            logout = receptionistResult.logout;
+                            exitSystem = receptionistResult.exit;
                             break;
                     }
                 }
@@ -437,8 +444,11 @@ namespace Assignment1_hospital_management_system.SystemManager
                 case 6: // Add patient
                     AddPatient();
                     return (false, false);
-                case 7: // Logout
-                case 8: // Exit
+                case 7: // Add receptionist - 新しく追加
+                    AddReceptionist();
+                    return (false, false);
+                case 8: // Logout
+                case 9: // Exit
                     return HandleCommonOptions(choice, 7, 8);
                 default:
                     return HandleCommonOptions(choice, 7, 8);
@@ -601,5 +611,235 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             Utils.PressAnyKeyToContinue();
         }
+        private void AddReceptionist()
+        {
+            Utils.DisplayHeader("Add Receptionist");
+
+            Console.WriteLine("新しい受付嬢をシステムに登録します");
+            Console.WriteLine();
+
+            string firstName = Utils.GetStringInput("名前: ");
+            string lastName = Utils.GetStringInput("姓: ");
+            string email = Utils.GetStringInput("メールアドレス: ");
+            string phone = Utils.GetStringInput("電話番号: ");
+            string address = Utils.GetStringInput("住所: ");
+
+            // 新しい受付嬢を作成
+            Receptionist newReceptionist = new Receptionist(firstName, lastName)
+            {
+                Email = email,
+                Phone = phone,
+                Address = address,
+                Password = "reception123" // デフォルトパスワード
+            };
+
+            // システムに追加
+            dataManager.AddReceptionist(newReceptionist);
+
+            Console.WriteLine();
+            Console.WriteLine($"受付嬢 {firstName} {lastName} がシステムに追加されました！");
+            Console.WriteLine($"受付嬢ID: {newReceptionist.Id}");
+            Console.WriteLine($"デフォルトパスワード: reception123");
+
+            Utils.PressAnyKeyToContinue();
+        }
+
     }
+
+    /// <summary>
+    /// 受付嬢メニューハンドラークラス（最小限機能）
+    /// </summary>
+    public class ReceptionistMenuHandler : BaseMenuHandler
+    {
+        public ReceptionistMenuHandler(DataManager dataManager) : base(dataManager) { }
+
+        /// <summary>
+        /// 受付嬢メニューの選択処理
+        /// </summary>
+        public (bool logout, bool exit) HandleMenu(Receptionist receptionist, int choice)
+        {
+            switch (choice)
+            {
+                case 1: // Register new patient
+                    RegisterNewPatient(receptionist);
+                    return (false, false);
+                case 2: // View existing patients
+                    ViewExistingPatients();
+                    return (false, false);
+                case 3: // View appointments
+                    ViewAppointments();
+                    return (false, false);
+                case 4: // Add new appointment
+                    AddNewAppointment(receptionist);
+                    return (false, false);
+                case 5: // Logout
+                case 6: // Exit
+                    return HandleCommonOptions(choice, 5, 6);
+                default:
+                    return HandleCommonOptions(choice, 5, 6);
+            }
+        }
+
+        /// <summary>
+        /// 機能1: 新規患者登録
+        /// </summary>
+        private void RegisterNewPatient(Receptionist receptionist)
+        {
+            Utils.DisplayHeader("Register New Patient");
+
+            string firstName = Utils.GetStringInput("患者の名前: ");
+            string lastName = Utils.GetStringInput("患者の姓: ");
+            string phone = Utils.GetStringInput("電話番号: ");
+            string email = Utils.GetStringInput("メールアドレス: ");
+            string address = Utils.GetStringInput("住所: ");
+
+            // 受付嬢のメソッドを使用して患者を登録
+            Patient newPatient = receptionist.RegisterNewPatient(firstName, lastName, phone, email, address);
+
+            // システムに患者を追加
+            dataManager.AddPatient(newPatient);
+
+            Console.WriteLine("患者登録が完了しました。");
+            Utils.PressAnyKeyToContinue();
+        }
+
+        /// <summary>
+        /// 機能2: 既存患者の閲覧
+        /// </summary>
+        private void ViewExistingPatients()
+        {
+            Utils.DisplayHeader("View Existing Patients");
+
+            if (dataManager.Patients.Count == 0)
+            {
+                Console.WriteLine("登録されている患者はいません。");
+                Utils.PressAnyKeyToContinue();
+                return;
+            }
+
+            Console.WriteLine($"登録患者一覧 (合計: {dataManager.Patients.Count}名)");
+            Console.WriteLine();
+            Console.WriteLine("ID | 名前 | 電話番号 | メールアドレス");
+            Console.WriteLine("".PadRight(60, '-'));
+
+            foreach (var patient in dataManager.Patients)
+            {
+                Console.WriteLine($"{patient.Id} | {patient.FirstName} {patient.LastName} | {patient.Phone} | {patient.Email}");
+            }
+
+            Utils.PressAnyKeyToContinue();
+        }
+
+        /// <summary>
+        /// 機能3: 予約一覧表示
+        /// </summary>
+        private void ViewAppointments()
+        {
+            Utils.DisplayHeader("View Appointments");
+
+            if (dataManager.Appointments.Count == 0)
+            {
+                Console.WriteLine("登録されている予約はありません。");
+                Utils.PressAnyKeyToContinue();
+                return;
+            }
+
+            Console.WriteLine($"予約一覧 (合計: {dataManager.Appointments.Count}件)");
+            Console.WriteLine();
+            Console.WriteLine("予約ID | 医師 | 患者 | 内容");
+            Console.WriteLine("".PadRight(70, '-'));
+
+            foreach (var appointment in dataManager.Appointments)
+            {
+                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == appointment.DoctorId);
+                var patient = dataManager.Patients.FirstOrDefault(p => p.Id == appointment.PatientId);
+
+                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "Unknown";
+                string patientName = patient != null ? $"{patient.FirstName} {patient.LastName}" : "Unknown";
+
+                Console.WriteLine($"{appointment.AppointmentId} | {doctorName} | {patientName} | {appointment.Description}");
+            }
+
+            Utils.PressAnyKeyToContinue();
+        }
+
+        /// <summary>
+        /// 機能4: 予約の追加
+        /// </summary>
+        private void AddNewAppointment(Receptionist receptionist)
+        {
+            Utils.DisplayHeader("Add New Appointment");
+
+            if (dataManager.Patients.Count == 0)
+            {
+                Console.WriteLine("患者が登録されていません。");
+                Utils.PressAnyKeyToContinue();
+                return;
+            }
+
+            if (dataManager.Doctors.Count == 0)
+            {
+                Console.WriteLine("医師が登録されていません。");
+                Utils.PressAnyKeyToContinue();
+                return;
+            }
+
+            // 患者選択
+            Console.WriteLine("患者を選択してください:");
+            for (int i = 0; i < dataManager.Patients.Count; i++)
+            {
+                var patient = dataManager.Patients[i];
+                Console.WriteLine($"{i + 1}. {patient.FirstName} {patient.LastName} (ID: {patient.Id})");
+            }
+
+            int patientChoice = Utils.GetIntegerInput("患者番号: ") - 1;
+            if (patientChoice < 0 || patientChoice >= dataManager.Patients.Count)
+            {
+                Console.WriteLine("無効な選択です。");
+                Utils.PressAnyKeyToContinue();
+                return;
+            }
+
+            Patient selectedPatient = dataManager.Patients[patientChoice];
+
+            // 医師選択
+            Console.WriteLine();
+            Console.WriteLine("医師を選択してください:");
+            for (int i = 0; i < dataManager.Doctors.Count; i++)
+            {
+                var doctor = dataManager.Doctors[i];
+                Console.WriteLine($"{i + 1}. Dr. {doctor.FirstName} {doctor.LastName} - {doctor.Specialization}");
+            }
+
+            int doctorChoice = Utils.GetIntegerInput("医師番号: ") - 1;
+            if (doctorChoice < 0 || doctorChoice >= dataManager.Doctors.Count)
+            {
+                Console.WriteLine("無効な選択です。");
+                Utils.PressAnyKeyToContinue();
+                return;
+            }
+
+            Doctor selectedDoctor = dataManager.Doctors[doctorChoice];
+
+            // 予約内容入力
+            string description = Utils.GetStringInput("予約内容: ");
+
+            // 受付嬢のメソッドを使用して予約を作成
+            Appointment newAppointment = receptionist.CreateAppointment(selectedPatient.Id, selectedDoctor.Id, description);
+
+            // システムに予約を追加
+            dataManager.AddAppointment(newAppointment);
+
+            // 患者に医師を割り当て（まだ割り当てられていない場合）
+            if (!selectedPatient.AssignedDoctorId.HasValue)
+            {
+                selectedPatient.AssignedDoctorId = selectedDoctor.Id;
+                selectedDoctor.AddPatient(selectedPatient.Id);
+            }
+
+            Console.WriteLine("予約が正常に作成されました。");
+            Utils.PressAnyKeyToContinue();
+        }
+    }
+
 }

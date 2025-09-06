@@ -42,8 +42,9 @@ namespace Assignment1_hospital_management_system.Models
             Console.WriteLine("4. Check patient details");
             Console.WriteLine("5. Add doctor");
             Console.WriteLine("6. Add patient");
-            Console.WriteLine("7. Logout");
-            Console.WriteLine("8. Exit");
+            Console.WriteLine("7. Add receptionist");
+            Console.WriteLine("8. Logout");
+            Console.WriteLine("9. Exit");
             Console.WriteLine("========================================");
         }
 
@@ -75,6 +76,12 @@ namespace Assignment1_hospital_management_system.Models
             // File saving logic would go here
         }
 
+        public void AddUser(Receptionist receptionist)
+        {
+            Console.WriteLine($"Receptionist {receptionist.FirstName} {receptionist.LastName} has been successfully added to the system!");
+            Console.WriteLine($"Generated Receptionist ID: {receptionist.Id}");
+        }
+
         public void AddUser(string userType, string firstName, string lastName)
         {
             switch (userType.ToLower())
@@ -84,6 +91,9 @@ namespace Assignment1_hospital_management_system.Models
                     break;
                 case "doctor":
                     AddUser(new Doctor(firstName, lastName, "General Practice"));
+                    break;
+                case "receptionist": 
+                    AddUser(new Receptionist(firstName, lastName));
                     break;
                 default:
                     Console.WriteLine("Invalid user type specified");
