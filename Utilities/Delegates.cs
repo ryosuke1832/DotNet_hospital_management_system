@@ -6,18 +6,18 @@ using System.Linq;
 namespace Assignment1_hospital_management_system.Utilities
 {
     /// <summary>
-    /// デリゲート定義と匿名メソッドのサンプル実装
-    /// 課題要件: デリゲートと匿名メソッドの例
+    /// Delegate definitions and anonymous method sample implementation
+    /// Assignment requirement: Examples of delegates and anonymous methods
     /// </summary>
     public static class Delegates
     {
-        // デリゲート定義例
+        // Delegate definition examples
         public delegate bool UserFilter<T>(T user) where T : User;
         public delegate void LogAction(string message);
         public delegate string UserFormatter<T>(T user) where T : User;
 
         /// <summary>
-        /// 匿名メソッドを使用したユーザーフィルタリング例
+        /// User filtering example using anonymous methods
         /// </summary>
         public static List<T> FilterUsers<T>(List<T> users, UserFilter<T> filter) where T : User
         {
@@ -25,25 +25,25 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// ログ機能にデリゲートを使用
+        /// Using delegates for logging functionality
         /// </summary>
         public static void ExecuteWithLogging(string actionName, LogAction logger, Action action)
         {
-            logger($"開始: {actionName}");
+            logger($"Started: {actionName}");
             try
             {
                 action();
-                logger($"完了: {actionName}");
+                logger($"Completed: {actionName}");
             }
             catch (Exception ex)
             {
-                logger($"エラー: {actionName} - {ex.Message}");
+                logger($"Error: {actionName} - {ex.Message}");
                 throw;
             }
         }
 
         /// <summary>
-        /// ユーザー表示フォーマット用デリゲート使用例
+        /// Example of using delegates for user display formatting
         /// </summary>
         public static void DisplayUsers<T>(List<T> users, UserFormatter<T> formatter) where T : User
         {

@@ -22,14 +22,12 @@ namespace Assignment1_hospital_management_system.SystemManager
             // Initialize all system components
             dataManager = new DataManager();
 
-
             User.SetDataManager(dataManager);
             Appointment.SetDataManager(dataManager);
 
             authService = new AuthenticationService(dataManager);
             menuController = new MenuController(dataManager);
         }
-
 
         /// <summary>
         /// Main entry point for the hospital system
@@ -64,10 +62,9 @@ namespace Assignment1_hospital_management_system.SystemManager
 
         private void InitializeSystem()
         {
-            Console.WriteLine("DOTNET Hospital Management System Initializing");
+            Console.WriteLine("DOTNET Hospital Management System Initializing...");
             dataManager.Initialize();
-            dataManager.RegisterExistingIds(); 
-
+            dataManager.RegisterExistingIds();
 
             System.Threading.Thread.Sleep(1000);
         }
@@ -78,44 +75,49 @@ namespace Assignment1_hospital_management_system.SystemManager
         private void DisplaySystemStatus()
         {
             Console.WriteLine();
-            Console.WriteLine("=== システム状態 ===");
-            Console.WriteLine($"登録済み管理者: {dataManager.Administrators.Count}名");
-            Console.WriteLine($"登録済み医師: {dataManager.Doctors.Count}名");
-            Console.WriteLine($"登録済み患者: {dataManager.Patients.Count}名");
-            Console.WriteLine($"登録済み予約: {dataManager.Appointments.Count}件");
+            Console.WriteLine("=== System Status ===");
+            Console.WriteLine($"Registered Administrators: {dataManager.Administrators.Count}");
+            Console.WriteLine($"Registered Doctors: {dataManager.Doctors.Count}");
+            Console.WriteLine($"Registered Patients: {dataManager.Patients.Count}");
+            Console.WriteLine($"Registered Appointments: {dataManager.Appointments.Count}");
 
             // Display actual IDs if sample data exists
             if (dataManager.Administrators.Count > 0 || dataManager.Doctors.Count > 0 || dataManager.Patients.Count > 0)
             {
                 Console.WriteLine();
-                Console.WriteLine("=== 利用可能なテストアカウント ===");
+                Console.WriteLine("=== Available Test Accounts ===");
 
                 foreach (var admin in dataManager.Administrators.Where(a => a.Password == "admin123"))
                 {
-                    Console.WriteLine($"管理者: {admin.FirstName} {admin.LastName} (ID: {admin.Id})");
+                    Console.WriteLine($"Administrator: {admin.FirstName} {admin.LastName} (ID: {admin.Id})");
                 }
 
                 foreach (var doctor in dataManager.Doctors.Where(d => d.Password == "doctor123"))
                 {
-                    Console.WriteLine($"医師: Dr. {doctor.FirstName} {doctor.LastName} (ID: {doctor.Id})");
+                    Console.WriteLine($"Doctor: Dr. {doctor.FirstName} {doctor.LastName} (ID: {doctor.Id})");
                 }
 
                 foreach (var patient in dataManager.Patients.Where(p => p.Password == "patient123"))
                 {
-                    Console.WriteLine($"患者: {patient.FirstName} {patient.LastName} (ID: {patient.Id})");
+                    Console.WriteLine($"Patient: {patient.FirstName} {patient.LastName} (ID: {patient.Id})");
+                }
+
+                foreach (var receptionist in dataManager.Receptionists.Where(r => r.Password == "reception123"))
+                {
+                    Console.WriteLine($"Receptionist: {receptionist.FirstName} {receptionist.LastName} (ID: {receptionist.Id})");
                 }
             }
-            Console.WriteLine("==================");
+            Console.WriteLine("======================");
             System.Threading.Thread.Sleep(2000);
         }
 
         private void Shutdown()
         {
             dataManager.SaveAllData();
-            Console.WriteLine("システム終了前のクリーンアップを実行中...");
+            Console.WriteLine("Performing cleanup before system shutdown...");
             dataManager.ShowMemoryUsageAndCleanup();
-            Console.WriteLine("DOTNET Hospital Management System をご利用いただき、ありがとうございました！");
-            Console.WriteLine("何かキーを押して終了してください...");
+            Console.WriteLine("Thank you for using the DOTNET Hospital Management System!");
+            Console.WriteLine("Press any key to exit...");
             Console.ReadKey();
         }
     }

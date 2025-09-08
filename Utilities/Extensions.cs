@@ -9,8 +9,8 @@ namespace Assignment1_hospital_management_system.Utilities
     public static class Extensions
     {
         /// <summary>
-        /// 文字列がメールアドレス形式かどうかを判定する拡張メソッド
-        /// 使用例: "test@email.com".IsValidEmail()
+        /// Extension method to determine if a string is in valid email address format
+        /// Usage example: "test@email.com".IsValidEmail()
         /// </summary>
         public static bool IsValidEmail(this string email)
         {
@@ -24,7 +24,5 @@ namespace Assignment1_hospital_management_system.Utilities
                 return false;
             }
         }
-
-
     }
 }

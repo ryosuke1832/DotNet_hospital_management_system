@@ -76,18 +76,18 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
-        /// デリゲートと匿名メソッドを使用した患者検索機能
+        /// Patient search function using delegates and anonymous methods
         /// </summary>
         public void ShowFilteredPatients()
         {
-            Utils.DisplayHeader("患者フィルタリング");
+            Utils.DisplayHeader("Patient Filtering");
 
-            Console.WriteLine("フィルタオプション:");
-            Console.WriteLine("1. 医師が割り当て済みの患者");
-            Console.WriteLine("2. メールアドレスが設定済みの患者");
-            Console.WriteLine("3. 全ての患者");
+            Console.WriteLine("Filter Options:");
+            Console.WriteLine("1. Patients with assigned doctors");
+            Console.WriteLine("2. Patients with email addresses set");
+            Console.WriteLine("3. All patients");
 
-            int choice = Utils.GetIntegerInput("選択してください: ");
+            int choice = Utils.GetIntegerInput("Please select: ");
 
             Delegates.UserFilter<Patient> filter = choice switch
             {
@@ -102,7 +102,7 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             if (filter == null)
             {
-                Console.WriteLine("無効な選択です。");
+                Console.WriteLine("Invalid selection.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
@@ -111,19 +111,19 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             Delegates.LogAction logger = delegate (string message)
             {
-                Console.WriteLine($"[ログ] {DateTime.Now:HH:mm:ss} - {message}");
+                Console.WriteLine($"[Log] {DateTime.Now:HH:mm:ss} - {message}");
             };
 
             Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
             {
                 var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
-                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "未割り当て";
-                return $"{p.FirstName} {p.LastName} | 担当医: {doctorName} | Email: {p.Email}";
+                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "Unassigned";
+                return $"{p.FirstName} {p.LastName} | Assigned Doctor: {doctorName} | Email: {p.Email}";
             };
 
-            Delegates.ExecuteWithLogging("患者一覧表示", logger, delegate ()
+            Delegates.ExecuteWithLogging("Display Patient List", logger, delegate ()
             {
-                Console.WriteLine($"\nフィルタ結果: {filteredPatients.Count}人の患者");
+                Console.WriteLine($"\nFilter Result: {filteredPatients.Count} patients");
                 Console.WriteLine("".PadRight(70, '-'));
                 Delegates.DisplayUsers(filteredPatients, formatter);
             });
@@ -133,7 +133,7 @@ namespace Assignment1_hospital_management_system.SystemManager
     }
 
     /// <summary>
-    /// 共通メニューハンドラーインターフェース
+    /// Common menu handler interface
     /// </summary>
     public interface IMenuHandler
     {
@@ -141,13 +141,13 @@ namespace Assignment1_hospital_management_system.SystemManager
     }
 
     /// <summary>
-    /// 基底メニューハンドラークラス - 共通機能を統一
+    /// Base menu handler class - unifies common functionality
     /// </summary>
     public abstract class BaseMenuHandler : IMenuHandler
     {
         protected DataManager dataManager;
 
-        // 各メニューの共通オプション設定
+        // Common option settings for each menu
         protected abstract int LogoutOption { get; }
         protected abstract int ExitOption { get; }
         protected abstract Dictionary<int, MenuAction> MenuActions { get; }
@@ -158,11 +158,11 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
-        /// 統一されたメニュー選択処理
+        /// Unified menu selection processing
         /// </summary>
         public virtual (bool logout, bool exit) HandleMenuChoice(User user, int choice)
         {
-            // 共通オプション（ログアウト/終了）の処理
+            // Handle common options (logout/exit)
             if (choice == LogoutOption)
             {
                 return (true, false);
@@ -173,7 +173,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 return (false, true);
             }
 
-            // 各メニュー固有のアクション実行
+            // Execute menu-specific actions
             if (MenuActions.ContainsKey(choice))
             {
                 try
@@ -183,20 +183,20 @@ namespace Assignment1_hospital_management_system.SystemManager
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"メニュー処理中にエラーが発生しました: {ex.Message}");
+                    Console.WriteLine($"An error occurred during menu processing: {ex.Message}");
                     Utils.PressAnyKeyToContinue();
                     return (false, false);
                 }
             }
 
-            // 無効な選択肢の処理
+            // Handle invalid selections
             Console.WriteLine("Invalid option. Please try again.");
             Utils.PressAnyKeyToContinue();
             return (false, false);
         }
 
         /// <summary>
-        /// 共通メニューフッター表示
+        /// Display common menu footer
         /// </summary>
         protected void ShowMenuFooter()
         {
@@ -204,7 +204,7 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
-        /// 共通エラーハンドリング
+        /// Common error handling
         /// </summary>
         protected void HandleError(string operation, Exception ex)
         {
@@ -214,12 +214,12 @@ namespace Assignment1_hospital_management_system.SystemManager
     }
 
     /// <summary>
-    /// メニューアクションのデリゲート定義
+    /// Menu action delegate definition
     /// </summary>
     public delegate void MenuAction(User user);
 
     /// <summary>
-    /// 患者メニューハンドラー
+    /// Patient menu handler
     /// </summary>
     public class PatientMenuHandler : BaseMenuHandler
     {
@@ -352,7 +352,7 @@ namespace Assignment1_hospital_management_system.SystemManager
     }
 
     /// <summary>
-    /// 医師メニューハンドラー
+    /// Doctor menu handler
     /// </summary>
     public class DoctorMenuHandler : BaseMenuHandler
     {
@@ -489,7 +489,7 @@ namespace Assignment1_hospital_management_system.SystemManager
     }
 
     /// <summary>
-    /// 管理者メニューハンドラー
+    /// Administrator menu handler
     /// </summary>
     public class AdminMenuHandler : BaseMenuHandler
     {
@@ -675,14 +675,14 @@ namespace Assignment1_hospital_management_system.SystemManager
         {
             Utils.DisplayHeader("Add Receptionist");
 
-            Console.WriteLine("新しい受付嬢をシステムに登録します");
+            Console.WriteLine("Registering a new receptionist with the system");
             Console.WriteLine();
 
-            string firstName = Utils.GetStringInput("名前: ");
-            string lastName = Utils.GetStringInput("姓: ");
-            string email = Utils.GetStringInput("メールアドレス: ");
-            string phone = Utils.GetStringInput("電話番号: ");
-            string address = Utils.GetStringInput("住所: ");
+            string firstName = Utils.GetStringInput("First Name: ");
+            string lastName = Utils.GetStringInput("Last Name: ");
+            string email = Utils.GetStringInput("Email Address: ");
+            string phone = Utils.GetStringInput("Phone Number: ");
+            string address = Utils.GetStringInput("Address: ");
 
             Receptionist newReceptionist = new Receptionist(firstName, lastName)
             {
@@ -695,23 +695,23 @@ namespace Assignment1_hospital_management_system.SystemManager
             dataManager.AddReceptionist(newReceptionist);
 
             Console.WriteLine();
-            Console.WriteLine($"受付嬢 {firstName} {lastName} がシステムに追加されました！");
-            Console.WriteLine($"受付嬢ID: {newReceptionist.Id}");
-            Console.WriteLine($"デフォルトパスワード: reception123");
+            Console.WriteLine($"Receptionist {firstName} {lastName} has been added to the system!");
+            Console.WriteLine($"Receptionist ID: {newReceptionist.Id}");
+            Console.WriteLine($"Default Password: reception123");
 
             Utils.PressAnyKeyToContinue();
         }
 
         private void ShowFilteredPatients()
         {
-            Utils.DisplayHeader("患者フィルタリング");
+            Utils.DisplayHeader("Patient Filtering");
 
-            Console.WriteLine("フィルタオプション:");
-            Console.WriteLine("1. 医師が割り当て済みの患者");
-            Console.WriteLine("2. メールアドレスが設定済みの患者");
-            Console.WriteLine("3. 全ての患者");
+            Console.WriteLine("Filter Options:");
+            Console.WriteLine("1. Patients with assigned doctors");
+            Console.WriteLine("2. Patients with email addresses set");
+            Console.WriteLine("3. All patients");
 
-            int choice = Utils.GetIntegerInput("選択してください: ");
+            int choice = Utils.GetIntegerInput("Please select: ");
 
             Delegates.UserFilter<Patient> filter = choice switch
             {
@@ -726,7 +726,7 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             if (filter == null)
             {
-                Console.WriteLine("無効な選択です。");
+                Console.WriteLine("Invalid selection.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
@@ -735,19 +735,19 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             Delegates.LogAction logger = delegate (string message)
             {
-                Console.WriteLine($"[ログ] {DateTime.Now:HH:mm:ss} - {message}");
+                Console.WriteLine($"[Log] {DateTime.Now:HH:mm:ss} - {message}");
             };
 
             Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
             {
                 var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
-                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "未割り当て";
-                return $"{p.FirstName} {p.LastName} | 担当医: {doctorName} | Email: {p.Email}";
+                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "Unassigned";
+                return $"{p.FirstName} {p.LastName} | Assigned Doctor: {doctorName} | Email: {p.Email}";
             };
 
-            Delegates.ExecuteWithLogging("患者一覧表示", logger, delegate ()
+            Delegates.ExecuteWithLogging("Display Patient List", logger, delegate ()
             {
-                Console.WriteLine($"\nフィルタ結果: {filteredPatients.Count}人の患者");
+                Console.WriteLine($"\nFilter Result: {filteredPatients.Count} patients");
                 Console.WriteLine("".PadRight(70, '-'));
                 Delegates.DisplayUsers(filteredPatients, formatter);
             });
@@ -757,7 +757,7 @@ namespace Assignment1_hospital_management_system.SystemManager
 
         private void ShowSystemStatisticsWithDelegates()
         {
-            Utils.DisplayHeader("システム統計 (デリゲート使用)");
+            Utils.DisplayHeader("System Statistics (Using Delegates)");
 
             Func<List<Patient>, int> patientCounter = delegate (List<Patient> patients)
             {
@@ -781,24 +781,24 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             Action<string> systemLogger = delegate (string message)
             {
-                Console.WriteLine($"[システム] {message}");
+                Console.WriteLine($"[System] {message}");
             };
 
-            systemLogger("システム統計を計算中...");
+            systemLogger("Calculating system statistics...");
 
-            Console.WriteLine($"総患者数: {patientCounter(dataManager.Patients)}");
-            Console.WriteLine($"総医師数: {doctorCounter(dataManager.Doctors)}");
-            Console.WriteLine($"割り当て済み患者: {assignedPatientCounter(dataManager.Patients)}");
-            Console.WriteLine($"未割り当て患者: {unassignedPatientCounter(dataManager.Patients)}");
-            Console.WriteLine($"総予約数: {dataManager.Appointments.Count}");
+            Console.WriteLine($"Total Patients: {patientCounter(dataManager.Patients)}");
+            Console.WriteLine($"Total Doctors: {doctorCounter(dataManager.Doctors)}");
+            Console.WriteLine($"Assigned Patients: {assignedPatientCounter(dataManager.Patients)}");
+            Console.WriteLine($"Unassigned Patients: {unassignedPatientCounter(dataManager.Patients)}");
+            Console.WriteLine($"Total Appointments: {dataManager.Appointments.Count}");
 
-            systemLogger("統計計算完了");
+            systemLogger("Statistics calculation completed");
             Utils.PressAnyKeyToContinue();
         }
     }
 
     /// <summary>
-    /// 受付嬢メニューハンドラー
+    /// Receptionist menu handler
     /// </summary>
     public class ReceptionistMenuHandler : BaseMenuHandler
     {
@@ -822,16 +822,16 @@ namespace Assignment1_hospital_management_system.SystemManager
         {
             Utils.DisplayHeader("Register New Patient");
 
-            string firstName = Utils.GetStringInput("患者の名前: ");
-            string lastName = Utils.GetStringInput("患者の姓: ");
-            string phone = Utils.GetStringInput("電話番号: ");
-            string email = Utils.GetStringInput("メールアドレス: ");
-            string address = Utils.GetStringInput("住所: ");
+            string firstName = Utils.GetStringInput("Patient's First Name: ");
+            string lastName = Utils.GetStringInput("Patient's Last Name: ");
+            string phone = Utils.GetStringInput("Phone Number: ");
+            string email = Utils.GetStringInput("Email Address: ");
+            string address = Utils.GetStringInput("Address: ");
 
             Patient newPatient = receptionist.RegisterNewPatient(firstName, lastName, phone, email, address);
             dataManager.AddPatient(newPatient);
 
-            Console.WriteLine("患者登録が完了しました。");
+            Console.WriteLine("Patient registration completed.");
             Utils.PressAnyKeyToContinue();
         }
 
@@ -841,14 +841,14 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             if (dataManager.Patients.Count == 0)
             {
-                Console.WriteLine("登録されている患者はいません。");
+                Console.WriteLine("No registered patients found.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
 
-            Console.WriteLine($"登録患者一覧 (合計: {dataManager.Patients.Count}名)");
+            Console.WriteLine($"Registered Patient List (Total: {dataManager.Patients.Count} patients)");
             Console.WriteLine();
-            Console.WriteLine("ID | 名前 | 電話番号 | メールアドレス");
+            Console.WriteLine("ID | Name | Phone Number | Email Address");
             Console.WriteLine("".PadRight(60, '-'));
 
             foreach (var patient in dataManager.Patients)
@@ -865,14 +865,14 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             if (dataManager.Appointments.Count == 0)
             {
-                Console.WriteLine("登録されている予約はありません。");
+                Console.WriteLine("No registered appointments found.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
 
-            Console.WriteLine($"予約一覧 (合計: {dataManager.Appointments.Count}件)");
+            Console.WriteLine($"Appointment List (Total: {dataManager.Appointments.Count} appointments)");
             Console.WriteLine();
-            Console.WriteLine("予約ID | 医師 | 患者 | 内容");
+            Console.WriteLine("Appointment ID | Doctor | Patient | Description");
             Console.WriteLine("".PadRight(70, '-'));
 
             foreach (var appointment in dataManager.Appointments)
@@ -895,72 +895,72 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             if (dataManager.Patients.Count == 0)
             {
-                Console.WriteLine("患者が登録されていません。");
+                Console.WriteLine("No patients registered.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
 
             if (dataManager.Doctors.Count == 0)
             {
-                Console.WriteLine("医師が登録されていません。");
+                Console.WriteLine("No doctors registered.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
 
-            // 患者選択
-            Console.WriteLine("患者を選択してください:");
+            // Patient selection
+            Console.WriteLine("Please select a patient:");
             for (int i = 0; i < dataManager.Patients.Count; i++)
             {
                 var patient = dataManager.Patients[i];
                 Console.WriteLine($"{i + 1}. {patient.FirstName} {patient.LastName} (ID: {patient.Id})");
             }
 
-            int patientChoice = Utils.GetIntegerInput("患者番号: ") - 1;
+            int patientChoice = Utils.GetIntegerInput("Patient number: ") - 1;
             if (patientChoice < 0 || patientChoice >= dataManager.Patients.Count)
             {
-                Console.WriteLine("無効な選択です。");
+                Console.WriteLine("Invalid selection.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
 
             Patient selectedPatient = dataManager.Patients[patientChoice];
 
-            // 医師選択
+            // Doctor selection
             Console.WriteLine();
-            Console.WriteLine("医師を選択してください:");
+            Console.WriteLine("Please select a doctor:");
             for (int i = 0; i < dataManager.Doctors.Count; i++)
             {
                 var doctor = dataManager.Doctors[i];
                 Console.WriteLine($"{i + 1}. Dr. {doctor.FirstName} {doctor.LastName} - {doctor.Specialization}");
             }
 
-            int doctorChoice = Utils.GetIntegerInput("医師番号: ") - 1;
+            int doctorChoice = Utils.GetIntegerInput("Doctor number: ") - 1;
             if (doctorChoice < 0 || doctorChoice >= dataManager.Doctors.Count)
             {
-                Console.WriteLine("無効な選択です。");
+                Console.WriteLine("Invalid selection.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
 
             Doctor selectedDoctor = dataManager.Doctors[doctorChoice];
 
-            // 予約内容入力
-            string description = Utils.GetStringInput("予約内容: ");
+            // Appointment description input
+            string description = Utils.GetStringInput("Appointment description: ");
 
-            // 受付嬢のメソッドを使用して予約を作成
+            // Create appointment using receptionist's method
             Appointment newAppointment = receptionist.CreateAppointment(selectedPatient.Id, selectedDoctor.Id, description);
 
-            // システムに予約を追加
+            // Add appointment to system
             dataManager.AddAppointment(newAppointment);
 
-            // 患者に医師を割り当て（まだ割り当てられていない場合）
+            // Assign doctor to patient (if not already assigned)
             if (!selectedPatient.AssignedDoctorId.HasValue)
             {
                 selectedPatient.AssignedDoctorId = selectedDoctor.Id;
                 selectedDoctor.AddPatient(selectedPatient.Id);
             }
 
-            Console.WriteLine("予約が正常に作成されました。");
+            Console.WriteLine("Appointment has been successfully created.");
             Utils.PressAnyKeyToContinue();
         }
     }

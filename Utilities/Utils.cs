@@ -8,12 +8,10 @@ using System.IO;
 
 namespace Assignment1_hospital_management_system.Utilities
 {
-
     // Utilities class - contains helper methods and common functionality
     public static class Utils
     {
         private static Random random = new Random();
-
 
         // Filter list of users by type
         public static List<T> FilterByType<T>(List<User> users) where T : User
@@ -144,7 +142,6 @@ namespace Assignment1_hospital_management_system.Utilities
             return password;
         }
 
-
         /// <summary>
         /// Get valid ID input from user with better error handling
         /// </summary>
@@ -160,7 +157,7 @@ namespace Assignment1_hospital_management_system.Utilities
 
                 if (string.IsNullOrWhiteSpace(input))
                 {
-                    Console.WriteLine("IDを入力してください。");
+                    Console.WriteLine("Please enter an ID.");
                     continue;
                 }
 
@@ -172,29 +169,30 @@ namespace Assignment1_hospital_management_system.Utilities
                     }
                     else
                     {
-                        Console.WriteLine("正の整数を入力してください。");
+                        Console.WriteLine("Please enter a positive integer.");
                     }
                 }
                 else
                 {
-                    Console.WriteLine("有効な数値を入力してください。");
+                    Console.WriteLine("Please enter a valid number.");
                 }
             }
         }
 
         /// <summary>
-        /// Display login instructions in Japanese
+        /// Display login instructions
         /// </summary>
         public static void DisplayLoginInstructions()
         {
             Console.WriteLine();
-            Console.WriteLine("ログイン方法:");
-            Console.WriteLine("1. ユーザーIDを入力してください");
-            Console.WriteLine("2. 対応するパスワードを入力してください");
+            Console.WriteLine("Login Instructions:");
+            Console.WriteLine("1. Please enter your User ID");
+            Console.WriteLine("2. Enter the corresponding password");
             Console.WriteLine();
         }
+
         /// <summary>
-        /// 終了オプション付きパスワード入力
+        /// Password input with exit option
         /// </summary>
         public static string GetPasswordInputWithExit(string prompt)
         {
@@ -222,7 +220,5 @@ namespace Assignment1_hospital_management_system.Utilities
             Console.WriteLine();
             return password;
         }
-
-
     }
 }

@@ -23,66 +23,123 @@ namespace Assignment1_hospital_management_system.SystemManager
         /// </summary>
         public bool HandleLogin(MenuController menuController)
         {
-            Utils.DisplayHeader("ログイン");
+            Utils.DisplayHeader("Login");
 
             Console.WriteLine();
-            Console.WriteLine("ログイン方法:");
-            Console.WriteLine("1. 下記のテストユーザーIDを入力してください");
-            Console.WriteLine("2. 対応するパスワードを入力してください");
-            Console.WriteLine("3. パスワードは画面上で'*'として表示されます");
-            Console.WriteLine("4. システムを終了する場合は 'exit' と入力してください");
+            Console.WriteLine("Login Instructions:");
+            Console.WriteLine("1. Please enter the test user ID from below");
+            Console.WriteLine("2. Enter the corresponding password");
+            Console.WriteLine("3. Password will be displayed as '*' on screen");
+            Console.WriteLine("4. Enter 'exit' to quit the system");
             Console.WriteLine();
 
+            // Display available accounts information
+            DisplayAvailableAccounts();
+
             Console.WriteLine();
-            Console.WriteLine("=== ログイン ===");
+            Console.WriteLine("=== Login ===");
 
-            // ユーザーID入力（終了チェック付き）
-            string userIdInput = Utils.GetStringInput("ユーザーID (終了する場合は 'exit'): ");
+            // User ID input (with exit check)
+            string userIdInput = Utils.GetStringInput("User ID (enter 'exit' to quit): ");
 
-            // 終了コマンドチェック
+            // Exit command check
             if (IsExitCommand(userIdInput))
             {
                 return ConfirmExit();
             }
 
-            // IDの数値変換チェック
+            // ID numeric conversion check
             if (!int.TryParse(userIdInput, out int userId))
             {
-                Console.WriteLine("無効なユーザーIDです。数値を入力してください。");
+                Console.WriteLine("Invalid User ID. Please enter a numeric value.");
                 Utils.PressAnyKeyToContinue();
-                return false; // ログイン画面に戻る
+                return false; // Return to login screen
             }
 
-            // パスワード入力（終了チェック付き）
-            string password = Utils.GetPasswordInputWithExit("パスワード (終了する場合は 'exit'): ");
+            // Password input (with exit check)
+            string password = Utils.GetPasswordInputWithExit("Password (enter 'exit' to quit): ");
 
-            // パスワード入力での終了チェック
+            // Exit check for password input
             if (IsExitCommand(password))
             {
                 return ConfirmExit();
             }
 
-            // 認証処理
+            // Authentication process
             User currentUser = dataManager.FindUser(userId, password);
 
             if (currentUser != null)
             {
-                Console.WriteLine("認証成功！システムにログインしています...");
+                Console.WriteLine("Authentication successful! Logging into the system...");
                 System.Threading.Thread.Sleep(1500);
 
-                // 適切なメニューを表示
+                // Display appropriate menu
                 return menuController.ShowUserMenu(currentUser);
             }
             else
             {
-                Console.WriteLine("IDまたはパスワードが正しくありません。再度お試しください。");
+                Console.WriteLine("Invalid ID or password. Please try again.");
                 Utils.PressAnyKeyToContinue();
-                return false; // ログイン画面に戻る
+                return false; // Return to login screen
             }
         }
 
         /// <summary>
-        /// 終了コマンドかどうかをチェック
+        /// Display available account information
+        /// </summary>
+        private void DisplayAvailableAccounts()
+        {
+            Console.WriteLine("=== Available Test Accounts ===");
+
+            // Administrator information
+            if (dataManager.Administrators.Count > 0)
+            {
+                Console.WriteLine("【Administrator Accounts】");
+                foreach (var admin in dataManager.Administrators)
+                {
+                    Console.WriteLine($"  ID: {admin.Id} | Name: {admin.FirstName} {admin.LastName} | Password: {admin.Password}");
+                }
+                Console.WriteLine();
+            }
+
+            // Doctor information
+            if (dataManager.Doctors.Count > 0)
+            {
+                Console.WriteLine("【Doctor Accounts】");
+                foreach (var doctor in dataManager.Doctors)
+                {
+                    Console.WriteLine($"  ID: {doctor.Id} | Name: Dr. {doctor.FirstName} {doctor.LastName} | Password: {doctor.Password}");
+                }
+                Console.WriteLine();
+            }
+
+            // Patient information
+            if (dataManager.Patients.Count > 0)
+            {
+                Console.WriteLine("【Patient Accounts】");
+                foreach (var patient in dataManager.Patients)
+                {
+                    Console.WriteLine($"  ID: {patient.Id} | Name: {patient.FirstName} {patient.LastName} | Password: {patient.Password}");
+                }
+                Console.WriteLine();
+            }
+
+            // Receptionist information
+            if (dataManager.Receptionists.Count > 0)
+            {
+                Console.WriteLine("【Receptionist Accounts】");
+                foreach (var receptionist in dataManager.Receptionists)
+                {
+                    Console.WriteLine($"  ID: {receptionist.Id} | Name: {receptionist.FirstName} {receptionist.LastName} | Password: {receptionist.Password}");
+                }
+                Console.WriteLine();
+            }
+
+            Console.WriteLine("================================");
+        }
+
+        /// <summary>
+        /// Check if input is an exit command
         /// </summary>
         private bool IsExitCommand(string input)
         {
@@ -92,31 +149,30 @@ namespace Assignment1_hospital_management_system.SystemManager
             string normalized = input.Trim().ToLower();
             return normalized == "exit" ||
                    normalized == "quit" ||
-                   normalized == "終了" ||
                    normalized == "q";
         }
 
         /// <summary>
-        /// 終了確認
+        /// Confirm exit
         /// </summary>
         private bool ConfirmExit()
         {
             Console.WriteLine();
-            Console.WriteLine("システムを終了しますか？");
-            string confirmation = Utils.GetStringInput("終了する場合は 'y' または 'yes' を入力: ");
+            Console.WriteLine("Do you want to exit the system?");
+            string confirmation = Utils.GetStringInput("Enter 'y' or 'yes' to exit: ");
 
             string normalized = confirmation.Trim().ToLower();
-            if (normalized == "y" || normalized == "yes" || normalized == "はい")
+            if (normalized == "y" || normalized == "yes")
             {
-                Console.WriteLine("システムを終了します...");
+                Console.WriteLine("Exiting the system...");
                 System.Threading.Thread.Sleep(1000);
-                return true; // システム終了
+                return true; // Exit system
             }
             else
             {
-                Console.WriteLine("ログイン画面に戻ります...");
+                Console.WriteLine("Returning to login screen...");
                 System.Threading.Thread.Sleep(1000);
-                return false; // ログイン画面に戻る
+                return false; // Return to login screen
             }
         }
     }
