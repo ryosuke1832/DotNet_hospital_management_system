@@ -7,44 +7,22 @@ using System.Linq;
 namespace Assignment1_hospital_management_system.SystemManager
 {
     /// <summary>
-    /// Controls all menu operations and user interactions
+    /// 統合されたメニューコントローラー - コード量を大幅削減
     /// </summary>
     public class MenuController
     {
         private DataManager dataManager;
-        private Dictionary<Type, IMenuHandler> menuHandlers;
 
         public MenuController(DataManager dataManager)
         {
             this.dataManager = dataManager;
-            InitializeMenuHandlers();
-        }
-
-        private void InitializeMenuHandlers()
-        {
-            menuHandlers = new Dictionary<Type, IMenuHandler>
-            {
-                { typeof(Patient), new PatientMenuHandler(dataManager) },
-                { typeof(Doctor), new DoctorMenuHandler(dataManager) },
-                { typeof(Administrator), new AdminMenuHandler(dataManager) },
-                { typeof(Receptionist), new ReceptionistMenuHandler(dataManager) }
-            };
         }
 
         /// <summary>
-        /// Show appropriate menu based on user type
+        /// ユーザータイプに応じたメニュー表示とハンドリング
         /// </summary>
         public bool ShowUserMenu(User currentUser)
         {
-            var userType = currentUser.GetType();
-
-            if (!menuHandlers.ContainsKey(userType))
-            {
-                Console.WriteLine($"No menu handler found for user type: {userType.Name}");
-                return false;
-            }
-
-            var handler = menuHandlers[userType];
             bool logout = false;
             bool exitSystem = false;
 
@@ -55,7 +33,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 try
                 {
                     int choice = Utils.GetIntegerInput("Please enter your choice: ");
-                    var result = handler.HandleMenuChoice(currentUser, choice);
+                    var result = HandleMenuChoice(currentUser, choice);
                     logout = result.logout;
                     exitSystem = result.exit;
                 }
@@ -76,174 +54,74 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
-        /// Patient search function using delegates and anonymous methods
+        /// 統一されたメニュー選択処理 - switch文で各ユーザータイプを処理
         /// </summary>
-        public void ShowFilteredPatients()
+        private (bool logout, bool exit) HandleMenuChoice(User user, int choice)
         {
-            Utils.DisplayHeader("Patient Filtering");
+            // 共通のログアウト・終了処理
+            var logoutExitOptions = GetLogoutExitOptions(user);
+            if (choice == logoutExitOptions.logout) return (true, false);
+            if (choice == logoutExitOptions.exit) return (false, true);
 
-            Console.WriteLine("Filter Options:");
-            Console.WriteLine("1. Patients with assigned doctors");
-            Console.WriteLine("2. Patients with email addresses set");
-            Console.WriteLine("3. All patients");
-
-            int choice = Utils.GetIntegerInput("Please select: ");
-
-            Delegates.UserFilter<Patient> filter = choice switch
+            // ユーザータイプ別の処理
+            try
             {
-                1 => delegate (Patient p) { return p.AssignedDoctorId.HasValue; }
-                ,
-                2 => delegate (Patient p) { return !string.IsNullOrEmpty(p.Email); }
-                ,
-                3 => delegate (Patient p) { return true; }
-                ,
-                _ => null
-            };
-
-            if (filter == null)
+                switch (user)
+                {
+                    case Patient patient:
+                        HandlePatientMenu(patient, choice);
+                        break;
+                    case Doctor doctor:
+                        HandleDoctorMenu(doctor, choice);
+                        break;
+                    case Administrator admin:
+                        HandleAdminMenu(admin, choice);
+                        break;
+                    case Receptionist receptionist:
+                        HandleReceptionistMenu(receptionist, choice);
+                        break;
+                    default:
+                        Console.WriteLine("Unknown user type.");
+                        break;
+                }
+            }
+            catch (Exception ex)
             {
-                Console.WriteLine("Invalid selection.");
+                Console.WriteLine($"Error: {ex.Message}");
                 Utils.PressAnyKeyToContinue();
-                return;
             }
 
-            var filteredPatients = Delegates.FilterUsers(dataManager.Patients, filter);
-
-            Delegates.LogAction logger = delegate (string message)
-            {
-                Console.WriteLine($"[Log] {DateTime.Now:HH:mm:ss} - {message}");
-            };
-
-            Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
-            {
-                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
-                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "Unassigned";
-                return $"{p.FirstName} {p.LastName} | Assigned Doctor: {doctorName} | Email: {p.Email}";
-            };
-
-            Delegates.ExecuteWithLogging("Display Patient List", logger, delegate ()
-            {
-                Console.WriteLine($"\nFilter Result: {filteredPatients.Count} patients");
-                Console.WriteLine("".PadRight(70, '-'));
-                Delegates.DisplayUsers(filteredPatients, formatter);
-            });
-
-            Utils.PressAnyKeyToContinue();
-        }
-    }
-
-    /// <summary>
-    /// Common menu handler interface
-    /// </summary>
-    public interface IMenuHandler
-    {
-        (bool logout, bool exit) HandleMenuChoice(User user, int choice);
-    }
-
-    /// <summary>
-    /// Base menu handler class - unifies common functionality
-    /// </summary>
-    public abstract class BaseMenuHandler : IMenuHandler
-    {
-        protected DataManager dataManager;
-
-        // Common option settings for each menu
-        protected abstract int LogoutOption { get; }
-        protected abstract int ExitOption { get; }
-        protected abstract Dictionary<int, MenuAction> MenuActions { get; }
-
-        protected BaseMenuHandler(DataManager dataManager)
-        {
-            this.dataManager = dataManager;
-        }
-
-        /// <summary>
-        /// Unified menu selection processing
-        /// </summary>
-        public virtual (bool logout, bool exit) HandleMenuChoice(User user, int choice)
-        {
-            // Handle common options (logout/exit)
-            if (choice == LogoutOption)
-            {
-                return (true, false);
-            }
-
-            if (choice == ExitOption)
-            {
-                return (false, true);
-            }
-
-            // Execute menu-specific actions
-            if (MenuActions.ContainsKey(choice))
-            {
-                try
-                {
-                    MenuActions[choice].Invoke(user);
-                    return (false, false);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"An error occurred during menu processing: {ex.Message}");
-                    Utils.PressAnyKeyToContinue();
-                    return (false, false);
-                }
-            }
-
-            // Handle invalid selections
-            Console.WriteLine("Invalid option. Please try again.");
-            Utils.PressAnyKeyToContinue();
             return (false, false);
         }
 
         /// <summary>
-        /// Display common menu footer
+        /// ユーザータイプ別のログアウト・終了オプション番号を取得
         /// </summary>
-        protected void ShowMenuFooter()
+        private (int logout, int exit) GetLogoutExitOptions(User user) => user switch
         {
-            Console.WriteLine("========================================");
-        }
+            Patient => (5, 6),
+            Doctor => (6, 7),
+            Administrator => (10, 11),
+            Receptionist => (5, 6),
+            _ => (99, 100) // デフォルト値
+        };
 
-        /// <summary>
-        /// Common error handling
-        /// </summary>
-        protected void HandleError(string operation, Exception ex)
+        #region Patient Menu Handlers
+        private void HandlePatientMenu(Patient patient, int choice)
         {
-            Console.WriteLine($"Error in {operation}: {ex.Message}");
-            Utils.PressAnyKeyToContinue();
-        }
-    }
-
-    /// <summary>
-    /// Menu action delegate definition
-    /// </summary>
-    public delegate void MenuAction(User user);
-
-    /// <summary>
-    /// Patient menu handler
-    /// </summary>
-    public class PatientMenuHandler : BaseMenuHandler
-    {
-        protected override int LogoutOption => 5;
-        protected override int ExitOption => 6;
-
-        protected override Dictionary<int, MenuAction> MenuActions { get; }
-
-        public PatientMenuHandler(DataManager dataManager) : base(dataManager)
-        {
-            MenuActions = new Dictionary<int, MenuAction>
+            switch (choice)
             {
-                { 1, user => ShowPatientDetails((Patient)user) },
-                { 2, user => ShowMyDoctorDetails((Patient)user) },
-                { 3, user => ShowPatientAppointments((Patient)user) },
-                { 4, user => BookAppointment((Patient)user) }
-            };
+                case 1: ShowPatientDetails(patient); break;
+                case 2: ShowMyDoctorDetails(patient); break;
+                case 3: ShowPatientAppointments(patient); break;
+                case 4: BookAppointment(patient); break;
+                default: Console.WriteLine("Invalid option."); Utils.PressAnyKeyToContinue(); break;
+            }
         }
 
         private void ShowPatientDetails(Patient patient)
         {
             Utils.DisplayHeader("My Details");
-            Console.WriteLine($"{patient.FirstName} {patient.LastName}'s Details");
-            Console.WriteLine();
             Console.WriteLine($"Patient ID: {patient.Id}");
             Console.WriteLine($"Full Name: {patient.FirstName} {patient.LastName}");
             Console.WriteLine($"Address: {patient.Address}");
@@ -256,54 +134,37 @@ namespace Assignment1_hospital_management_system.SystemManager
         private void ShowMyDoctorDetails(Patient patient)
         {
             Utils.DisplayHeader("My Doctor");
-
             if (patient.AssignedDoctorId.HasValue)
             {
-                Doctor doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == patient.AssignedDoctorId.Value);
+                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == patient.AssignedDoctorId.Value);
                 if (doctor != null)
                 {
-                    Console.WriteLine("Your doctor:");
                     Console.WriteLine($"Name: Dr. {doctor.FirstName} {doctor.LastName}");
                     Console.WriteLine($"Email: {doctor.Email}");
                     Console.WriteLine($"Phone: {doctor.Phone}");
                     Console.WriteLine($"Specialization: {doctor.Specialization}");
-                    Console.WriteLine($"Address: {doctor.Address}");
                 }
-                else
-                {
-                    Console.WriteLine("Doctor information not found.");
-                }
+                else Console.WriteLine("Doctor information not found.");
             }
-            else
-            {
-                Console.WriteLine("You are not currently assigned to a doctor.");
-            }
-
+            else Console.WriteLine("You are not currently assigned to a doctor.");
             Utils.PressAnyKeyToContinue();
         }
 
         private void ShowPatientAppointments(Patient patient)
         {
             Utils.DisplayHeader("My Appointments");
+            var appointments = dataManager.Appointments.Where(a => a.PatientId == patient.Id).ToList();
 
-            var patientAppointments = Utils.FindAppointmentsByPatientId(dataManager.Appointments, patient.Id);
-
-            if (patientAppointments.Count > 0)
+            if (appointments.Any())
             {
-                Console.WriteLine($"Appointments for {patient.FirstName} {patient.LastName}:");
-                Console.WriteLine();
-                foreach (var appointment in patientAppointments)
+                foreach (var appointment in appointments)
                 {
                     var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == appointment.DoctorId);
                     string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "Unknown Doctor";
-                    Console.WriteLine($"Doctor: {doctorName} | Patient: {patient.FirstName} {patient.LastName} | Description: {appointment.Description}");
+                    Console.WriteLine($"Doctor: {doctorName} | Description: {appointment.Description}");
                 }
             }
-            else
-            {
-                Console.WriteLine("No appointments found.");
-            }
-
+            else Console.WriteLine("No appointments found.");
             Utils.PressAnyKeyToContinue();
         }
 
@@ -311,23 +172,21 @@ namespace Assignment1_hospital_management_system.SystemManager
         {
             Utils.DisplayHeader("Book Appointment");
 
+            // 医師が割り当てられていない場合は選択させる
             if (!patient.AssignedDoctorId.HasValue)
             {
-                Console.WriteLine("You are not registered with a doctor. Please choose which doctor you would like to register with:");
-                Console.WriteLine();
-
+                Console.WriteLine("Choose a doctor to register with:");
                 for (int i = 0; i < dataManager.Doctors.Count; i++)
                 {
-                    Console.WriteLine($"{i + 1}. Dr. {dataManager.Doctors[i].FirstName} {dataManager.Doctors[i].LastName} | Specialization: {dataManager.Doctors[i].Specialization}");
+                    var doc = dataManager.Doctors[i];
+                    Console.WriteLine($"{i + 1}. Dr. {doc.FirstName} {doc.LastName} | {doc.Specialization}");
                 }
 
-                int doctorChoice = Utils.GetIntegerInput("Enter doctor number: ") - 1;
-
-                if (doctorChoice >= 0 && doctorChoice < dataManager.Doctors.Count)
+                int choice = Utils.GetIntegerInput("Enter doctor number: ") - 1;
+                if (choice >= 0 && choice < dataManager.Doctors.Count)
                 {
-                    patient.AssignedDoctorId = dataManager.Doctors[doctorChoice].Id;
-                    dataManager.Doctors[doctorChoice].AddPatient(patient.Id);
-                    Console.WriteLine($"You have been registered with Dr. {dataManager.Doctors[doctorChoice].FirstName} {dataManager.Doctors[doctorChoice].LastName}");
+                    patient.AssignedDoctorId = dataManager.Doctors[choice].Id;
+                    dataManager.Doctors[choice].AddPatient(patient.Id);
                 }
                 else
                 {
@@ -337,47 +196,34 @@ namespace Assignment1_hospital_management_system.SystemManager
                 }
             }
 
-            string description = Utils.GetStringInput("Description of the appointment: ");
+            string description = Utils.GetStringInput("Description: ");
+            var appointment = new Appointment(patient.AssignedDoctorId.Value, patient.Id, description);
+            dataManager.AddAppointment(appointment);
 
-            Appointment newAppointment = new Appointment(patient.AssignedDoctorId.Value, patient.Id, description);
-            dataManager.AddAppointment(newAppointment);
-
-            var assignedDoctor = dataManager.Doctors.First(d => d.Id == patient.AssignedDoctorId);
-            Console.WriteLine($"You are booking a new appointment with Dr. {assignedDoctor.FirstName} {assignedDoctor.LastName}");
-            Console.WriteLine($"Description of the appointment: {description}");
-            Console.WriteLine("The appointment has been booked successfully");
-
+            Console.WriteLine("Appointment booked successfully!");
             Utils.PressAnyKeyToContinue();
         }
-    }
+        #endregion
 
-    /// <summary>
-    /// Doctor menu handler
-    /// </summary>
-    public class DoctorMenuHandler : BaseMenuHandler
-    {
-        protected override int LogoutOption => 6;
-        protected override int ExitOption => 7;
-
-        protected override Dictionary<int, MenuAction> MenuActions { get; }
-
-        public DoctorMenuHandler(DataManager dataManager) : base(dataManager)
+        #region Doctor Menu Handlers
+        private void HandleDoctorMenu(Doctor doctor, int choice)
         {
-            MenuActions = new Dictionary<int, MenuAction>
+            switch (choice)
             {
-                { 1, user => ShowDoctorDetails((Doctor)user) },
-                { 2, user => ShowDoctorPatients((Doctor)user) },
-                { 3, user => ShowDoctorAppointments((Doctor)user) },
-                { 4, user => CheckParticularPatient((Doctor)user) },
-                { 5, user => ListAppointmentsWithPatient((Doctor)user) }
-            };
+                case 1: ShowDoctorDetails(doctor); break;
+                case 2: ShowDoctorPatients(doctor); break;
+                case 3: ShowDoctorAppointments(doctor); break;
+                case 4: CheckParticularPatient(); break;
+                case 5: ListAppointmentsWithPatient(doctor); break;
+                default: Console.WriteLine("Invalid option."); Utils.PressAnyKeyToContinue(); break;
+            }
         }
 
         private void ShowDoctorDetails(Doctor doctor)
         {
             Utils.DisplayHeader("My Details");
             Console.WriteLine($"Name: Dr. {doctor.FirstName} {doctor.LastName}");
-            Console.WriteLine($"Email Address: {doctor.Email}");
+            Console.WriteLine($"Email: {doctor.Email}");
             Console.WriteLine($"Phone: {doctor.Phone}");
             Console.WriteLine($"Address: {doctor.Address}");
             Console.WriteLine($"Specialization: {doctor.Specialization}");
@@ -387,450 +233,260 @@ namespace Assignment1_hospital_management_system.SystemManager
         private void ShowDoctorPatients(Doctor doctor)
         {
             Utils.DisplayHeader("My Patients");
-
-            Console.WriteLine($"Patients assigned to Dr. {doctor.FirstName} {doctor.LastName}:");
-            Console.WriteLine();
-
-            if (doctor.PatientIds.Count > 0)
+            if (doctor.PatientIds.Any())
             {
                 foreach (int patientId in doctor.PatientIds)
                 {
-                    Patient patient = dataManager.Patients.FirstOrDefault(p => p.Id == patientId);
+                    var patient = dataManager.Patients.FirstOrDefault(p => p.Id == patientId);
                     if (patient != null)
-                    {
-                        Console.WriteLine($"Patient: {patient.FirstName} {patient.LastName} | Doctor: Dr. {doctor.FirstName} {doctor.LastName} | Email Address: {patient.Email} | Phone: {patient.Phone} | Address: {patient.Address}");
-                    }
+                        Console.WriteLine($"Patient: {patient.FirstName} {patient.LastName} | Email: {patient.Email} | Phone: {patient.Phone}");
                 }
             }
-            else
-            {
-                Console.WriteLine("No patients assigned to this doctor.");
-            }
-
+            else Console.WriteLine("No patients assigned.");
             Utils.PressAnyKeyToContinue();
         }
 
         private void ShowDoctorAppointments(Doctor doctor)
         {
             Utils.DisplayHeader("All Appointments");
+            var appointments = dataManager.Appointments.Where(a => a.DoctorId == doctor.Id).ToList();
 
-            var doctorAppointments = Utils.FindAppointmentsByDoctorId(dataManager.Appointments, doctor.Id);
-
-            if (doctorAppointments.Count > 0)
+            if (appointments.Any())
             {
-                Console.WriteLine("Doctor | Patient | Description");
-                Console.WriteLine("".PadRight(50, '-'));
-
-                foreach (var appointment in doctorAppointments)
+                foreach (var appointment in appointments)
                 {
                     var patient = dataManager.Patients.FirstOrDefault(p => p.Id == appointment.PatientId);
-                    string patientName = patient != null ? $"{patient.FirstName} {patient.LastName}" : "Unknown Patient";
-                    Console.WriteLine($"Dr. {doctor.FirstName} {doctor.LastName} | {patientName} | {appointment.Description}");
+                    string patientName = patient != null ? $"{patient.FirstName} {patient.LastName}" : "Unknown";
+                    Console.WriteLine($"Patient: {patientName} | Description: {appointment.Description}");
                 }
             }
-            else
-            {
-                Console.WriteLine("No appointments found.");
-            }
-
+            else Console.WriteLine("No appointments found.");
             Utils.PressAnyKeyToContinue();
         }
 
-        private void CheckParticularPatient(Doctor doctor)
+        private void CheckParticularPatient()
         {
             Utils.DisplayHeader("Check Patient Details");
-
-            int patientId = Utils.GetIntegerInput("Enter the ID of the patient to check: ");
-
-            Patient patient = dataManager.Patients.FirstOrDefault(p => p.Id == patientId);
+            int patientId = Utils.GetIntegerInput("Enter patient ID: ");
+            var patient = dataManager.Patients.FirstOrDefault(p => p.Id == patientId);
 
             if (patient != null)
-            {
-                Console.WriteLine($"Patient | Doctor | Email Address | Phone | Address");
-                Console.WriteLine("".PadRight(70, '-'));
-                Console.WriteLine($"{patient.FirstName} {patient.LastName} | Dr. {doctor.FirstName} {doctor.LastName} | {patient.Email} | {patient.Phone} | {patient.Address}");
-            }
+                Console.WriteLine($"Patient: {patient.FirstName} {patient.LastName} | Email: {patient.Email} | Phone: {patient.Phone}");
             else
-            {
                 Console.WriteLine($"No patient found with ID: {patientId}");
-            }
-
             Utils.PressAnyKeyToContinue();
         }
 
         private void ListAppointmentsWithPatient(Doctor doctor)
         {
-            Utils.DisplayHeader("Appointments With");
+            Utils.DisplayHeader("Appointments With Patient");
+            int patientId = Utils.GetIntegerInput("Enter patient ID: ");
+            var appointments = dataManager.Appointments.Where(a => a.DoctorId == doctor.Id && a.PatientId == patientId).ToList();
 
-            int patientId = Utils.GetIntegerInput("Enter the ID of the patient you would like to view appointments for: ");
-
-            var appointmentsWithPatient = Utils.FindAppointmentsByDoctorAndPatient(dataManager.Appointments, doctor.Id, patientId);
-
-            if (appointmentsWithPatient.Count > 0)
+            if (appointments.Any())
             {
-                Patient patient = dataManager.Patients.FirstOrDefault(p => p.Id == patientId);
-                string patientName = patient != null ? $"{patient.FirstName} {patient.LastName}" : "Unknown Patient";
-
-                Console.WriteLine("Doctor | Patient | Description");
-                Console.WriteLine("".PadRight(50, '-'));
-
-                foreach (var appointment in appointmentsWithPatient)
-                {
-                    Console.WriteLine($"Dr. {doctor.FirstName} {doctor.LastName} | {patientName} | {appointment.Description}");
-                }
+                var patient = dataManager.Patients.FirstOrDefault(p => p.Id == patientId);
+                string patientName = patient?.FirstName + " " + patient?.LastName ?? "Unknown";
+                foreach (var appointment in appointments)
+                    Console.WriteLine($"Patient: {patientName} | Description: {appointment.Description}");
             }
-            else
-            {
-                Console.WriteLine($"No appointments found with patient ID: {patientId}");
-            }
-
+            else Console.WriteLine($"No appointments found with patient ID: {patientId}");
             Utils.PressAnyKeyToContinue();
         }
-    }
+        #endregion
 
-    /// <summary>
-    /// Administrator menu handler
-    /// </summary>
-    public class AdminMenuHandler : BaseMenuHandler
-    {
-        protected override int LogoutOption => 10;
-        protected override int ExitOption => 11;
-
-        protected override Dictionary<int, MenuAction> MenuActions { get; }
-
-        public AdminMenuHandler(DataManager dataManager) : base(dataManager)
+        #region Admin Menu Handlers  
+        private void HandleAdminMenu(Administrator admin, int choice)
         {
-            MenuActions = new Dictionary<int, MenuAction>
+            switch (choice)
             {
-                { 1, user => ShowAllDoctors() },
-                { 2, user => CheckDoctorDetails() },
-                { 3, user => ShowAllPatients() },
-                { 4, user => CheckPatientDetails() },
-                { 5, user => AddDoctor() },
-                { 6, user => AddPatient() },
-                { 7, user => AddReceptionist() },
-                { 8, user => ShowFilteredPatients() },
-                { 9, user => ShowSystemStatisticsWithDelegates() }
-            };
+                case 1: ShowAllDoctors(); break;
+                case 2: CheckDoctorDetails(); break;
+                case 3: ShowAllPatients(); break;
+                case 4: CheckPatientDetails(); break;
+                case 5: AddDoctor(); break;
+                case 6: AddPatient(); break;
+                case 7: AddReceptionist(); break;
+                case 8: ShowFilteredPatients(); break;
+                case 9: ShowSystemStatistics(); break;
+                default: Console.WriteLine("Invalid option."); Utils.PressAnyKeyToContinue(); break;
+            }
         }
 
         private void ShowAllDoctors()
         {
             Utils.DisplayHeader("All Doctors");
-
-            Console.WriteLine("All doctors registered to the DOTNET Hospital Management System");
-            Console.WriteLine();
-            Console.WriteLine("Name | Email Address | Phone | Address");
+            Console.WriteLine("Name | Email | Phone | Address");
             Console.WriteLine("".PadRight(60, '-'));
-
-            foreach (Doctor doctor in dataManager.Doctors)
-            {
+            foreach (var doctor in dataManager.Doctors)
                 Console.WriteLine($"Dr. {doctor.FirstName} {doctor.LastName} | {doctor.Email} | {doctor.Phone} | {doctor.Address}");
-            }
-
             Utils.PressAnyKeyToContinue();
         }
 
         private void CheckDoctorDetails()
         {
             Utils.DisplayHeader("Doctor Details");
-
-            int doctorId = Utils.GetIntegerInput("Please enter the ID of the doctor who's details you are checking: ");
-
-            Doctor doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == doctorId);
+            int doctorId = Utils.GetIntegerInput("Enter doctor ID: ");
+            var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == doctorId);
 
             if (doctor != null)
-            {
-                Console.WriteLine($"Details for Dr. {doctor.FirstName} {doctor.LastName}");
-                Console.WriteLine();
-                Console.WriteLine("Name | Email Address | Phone | Address");
-                Console.WriteLine("".PadRight(60, '-'));
                 Console.WriteLine($"Dr. {doctor.FirstName} {doctor.LastName} | {doctor.Email} | {doctor.Phone} | {doctor.Address}");
-            }
             else
-            {
                 Console.WriteLine($"No doctor found with ID: {doctorId}");
-            }
-
             Utils.PressAnyKeyToContinue();
         }
 
         private void ShowAllPatients()
         {
             Utils.DisplayHeader("All Patients");
-
-            Console.WriteLine("All patients registered to the DOTNET Hospital Management System");
-            Console.WriteLine();
-            Console.WriteLine("Patient | Doctor | Email Address | Phone | Address");
+            Console.WriteLine("Patient | Doctor | Email | Phone | Address");
             Console.WriteLine("".PadRight(70, '-'));
 
-            foreach (Patient patient in dataManager.Patients)
+            foreach (var patient in dataManager.Patients)
             {
-                Doctor assignedDoctor = null;
-                if (patient.AssignedDoctorId.HasValue)
-                {
-                    assignedDoctor = dataManager.Doctors.FirstOrDefault(d => d.Id == patient.AssignedDoctorId.Value);
-                }
-
-                string doctorName = assignedDoctor != null ? $"Dr. {assignedDoctor.FirstName} {assignedDoctor.LastName}" : "No Doctor Assigned";
+                var doctor = patient.AssignedDoctorId.HasValue ?
+                    dataManager.Doctors.FirstOrDefault(d => d.Id == patient.AssignedDoctorId.Value) : null;
+                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "No Doctor";
                 Console.WriteLine($"{patient.FirstName} {patient.LastName} | {doctorName} | {patient.Email} | {patient.Phone} | {patient.Address}");
             }
-
             Utils.PressAnyKeyToContinue();
         }
 
         private void CheckPatientDetails()
         {
             Utils.DisplayHeader("Patient Details");
-
-            int patientId = Utils.GetIntegerInput("Please enter the ID of the patient who's details you are checking: ");
-
-            Patient patient = dataManager.Patients.FirstOrDefault(p => p.Id == patientId);
+            int patientId = Utils.GetIntegerInput("Enter patient ID: ");
+            var patient = dataManager.Patients.FirstOrDefault(p => p.Id == patientId);
 
             if (patient != null)
             {
-                Doctor assignedDoctor = null;
-                if (patient.AssignedDoctorId.HasValue)
-                {
-                    assignedDoctor = dataManager.Doctors.FirstOrDefault(d => d.Id == patient.AssignedDoctorId.Value);
-                }
-
-                Console.WriteLine($"Details for {patient.FirstName} {patient.LastName}");
-                Console.WriteLine();
-                Console.WriteLine("Patient | Doctor | Email Address | Phone | Address");
-                Console.WriteLine("".PadRight(70, '-'));
-
-                string doctorName = assignedDoctor != null ? $"Dr. {assignedDoctor.FirstName} {assignedDoctor.LastName}" : "No Doctor Assigned";
-                Console.WriteLine($"{patient.FirstName} {patient.LastName} | {doctorName} | {patient.Email} | {patient.Phone} | {patient.Address}");
+                var doctor = patient.AssignedDoctorId.HasValue ?
+                    dataManager.Doctors.FirstOrDefault(d => d.Id == patient.AssignedDoctorId.Value) : null;
+                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "No Doctor";
+                Console.WriteLine($"{patient.FirstName} {patient.LastName} | {doctorName} | {patient.Email} | {patient.Phone}");
             }
-            else
-            {
-                Console.WriteLine($"No patient found with ID: {patientId}");
-            }
-
+            else Console.WriteLine($"No patient found with ID: {patientId}");
             Utils.PressAnyKeyToContinue();
         }
 
         private void AddDoctor()
         {
             Utils.DisplayHeader("Add Doctor");
-
-            Console.WriteLine("Registering a new doctor with the DOTNET Hospital Management System");
-
-            string firstName = Utils.GetStringInput("First Name: ");
-            string lastName = Utils.GetStringInput("Last Name: ");
-            string email = Utils.GetStringInput("Email: ");
-            string phone = Utils.GetStringInput("Phone: ");
-            string address = Utils.GetStringInput("Address: ");
-            string specialization = Utils.GetStringInput("Specialization: ");
-
-            Doctor newDoctor = new Doctor(firstName, lastName, specialization)
+            var doctor = new Doctor(
+                Utils.GetStringInput("First Name: "),
+                Utils.GetStringInput("Last Name: "),
+                Utils.GetStringInput("Specialization: ")
+            )
             {
-                Email = email,
-                Phone = phone,
-                Address = address,
+                Email = Utils.GetStringInput("Email: "),
+                Phone = Utils.GetStringInput("Phone: "),
+                Address = Utils.GetStringInput("Address: "),
                 Password = "password123"
             };
 
-            dataManager.AddDoctor(newDoctor);
-
-            Console.WriteLine($"Dr {firstName} {lastName} added to the system!");
-            Console.WriteLine($"Doctor ID: {newDoctor.Id}");
-            Console.WriteLine($"Default Password: password123");
-
+            dataManager.AddDoctor(doctor);
+            Console.WriteLine($"Dr {doctor.FirstName} {doctor.LastName} added! ID: {doctor.Id}");
             Utils.PressAnyKeyToContinue();
         }
 
         private void AddPatient()
         {
             Utils.DisplayHeader("Add Patient");
-
-            Console.WriteLine("Registering a new patient with the DOTNET Hospital Management System");
-
-            string firstName = Utils.GetStringInput("First Name: ");
-            string lastName = Utils.GetStringInput("Last Name: ");
-            string email = Utils.GetStringInput("Email: ");
-            string phone = Utils.GetStringInput("Phone: ");
-            string address = Utils.GetStringInput("Address: ");
-
-            Patient newPatient = new Patient(firstName, lastName)
+            var patient = new Patient(
+                Utils.GetStringInput("First Name: "),
+                Utils.GetStringInput("Last Name: ")
+            )
             {
-                Email = email,
-                Phone = phone,
-                Address = address,
+                Email = Utils.GetStringInput("Email: "),
+                Phone = Utils.GetStringInput("Phone: "),
+                Address = Utils.GetStringInput("Address: "),
                 Password = "password123",
                 MedicalHistory = "No significant medical history"
             };
 
-            dataManager.AddPatient(newPatient);
-
-            Console.WriteLine($"{firstName} {lastName} added to the system!");
-            Console.WriteLine($"Patient ID: {newPatient.Id}");
-            Console.WriteLine($"Default Password: password123");
-
+            dataManager.AddPatient(patient);
+            Console.WriteLine($"{patient.FirstName} {patient.LastName} added! ID: {patient.Id}");
             Utils.PressAnyKeyToContinue();
         }
 
         private void AddReceptionist()
         {
             Utils.DisplayHeader("Add Receptionist");
-
-            Console.WriteLine("Registering a new receptionist with the system");
-            Console.WriteLine();
-
-            string firstName = Utils.GetStringInput("First Name: ");
-            string lastName = Utils.GetStringInput("Last Name: ");
-            string email = Utils.GetStringInput("Email Address: ");
-            string phone = Utils.GetStringInput("Phone Number: ");
-            string address = Utils.GetStringInput("Address: ");
-
-            Receptionist newReceptionist = new Receptionist(firstName, lastName)
+            var receptionist = new Receptionist(
+                Utils.GetStringInput("First Name: "),
+                Utils.GetStringInput("Last Name: ")
+            )
             {
-                Email = email,
-                Phone = phone,
-                Address = address,
+                Email = Utils.GetStringInput("Email: "),
+                Phone = Utils.GetStringInput("Phone: "),
+                Address = Utils.GetStringInput("Address: "),
                 Password = "reception123"
             };
 
-            dataManager.AddReceptionist(newReceptionist);
-
-            Console.WriteLine();
-            Console.WriteLine($"Receptionist {firstName} {lastName} has been added to the system!");
-            Console.WriteLine($"Receptionist ID: {newReceptionist.Id}");
-            Console.WriteLine($"Default Password: reception123");
-
+            dataManager.AddReceptionist(receptionist);
+            Console.WriteLine($"{receptionist.FirstName} {receptionist.LastName} added! ID: {receptionist.Id}");
             Utils.PressAnyKeyToContinue();
         }
 
         private void ShowFilteredPatients()
         {
             Utils.DisplayHeader("Patient Filtering");
+            Console.WriteLine("1. Patients with assigned doctors\n2. Patients with email\n3. All patients");
 
-            Console.WriteLine("Filter Options:");
-            Console.WriteLine("1. Patients with assigned doctors");
-            Console.WriteLine("2. Patients with email addresses set");
-            Console.WriteLine("3. All patients");
-
-            int choice = Utils.GetIntegerInput("Please select: ");
-
-            Delegates.UserFilter<Patient> filter = choice switch
+            int choice = Utils.GetIntegerInput("Select: ");
+            var filteredPatients = choice switch
             {
-                1 => delegate (Patient p) { return p.AssignedDoctorId.HasValue; }
-                ,
-                2 => delegate (Patient p) { return !string.IsNullOrEmpty(p.Email); }
-                ,
-                3 => delegate (Patient p) { return true; }
-                ,
-                _ => null
+                1 => dataManager.Patients.Where(p => p.AssignedDoctorId.HasValue).ToList(),
+                2 => dataManager.Patients.Where(p => !string.IsNullOrEmpty(p.Email)).ToList(),
+                3 => dataManager.Patients.ToList(),
+                _ => new List<Patient>()
             };
 
-            if (filter == null)
+            Console.WriteLine($"\nFilter Result: {filteredPatients.Count} patients");
+            foreach (var patient in filteredPatients)
             {
-                Console.WriteLine("Invalid selection.");
-                Utils.PressAnyKeyToContinue();
-                return;
-            }
-
-            var filteredPatients = Delegates.FilterUsers(dataManager.Patients, filter);
-
-            Delegates.LogAction logger = delegate (string message)
-            {
-                Console.WriteLine($"[Log] {DateTime.Now:HH:mm:ss} - {message}");
-            };
-
-            Delegates.UserFormatter<Patient> formatter = delegate (Patient p)
-            {
-                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
+                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == patient.AssignedDoctorId);
                 string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "Unassigned";
-                return $"{p.FirstName} {p.LastName} | Assigned Doctor: {doctorName} | Email: {p.Email}";
-            };
-
-            Delegates.ExecuteWithLogging("Display Patient List", logger, delegate ()
-            {
-                Console.WriteLine($"\nFilter Result: {filteredPatients.Count} patients");
-                Console.WriteLine("".PadRight(70, '-'));
-                Delegates.DisplayUsers(filteredPatients, formatter);
-            });
-
+                Console.WriteLine($"{patient.FirstName} {patient.LastName} | Doctor: {doctorName} | Email: {patient.Email}");
+            }
             Utils.PressAnyKeyToContinue();
         }
 
-        private void ShowSystemStatisticsWithDelegates()
+        private void ShowSystemStatistics()
         {
-            Utils.DisplayHeader("System Statistics (Using Delegates)");
-
-            Func<List<Patient>, int> patientCounter = delegate (List<Patient> patients)
-            {
-                return patients.Count;
-            };
-
-            Func<List<Doctor>, int> doctorCounter = delegate (List<Doctor> doctors)
-            {
-                return doctors.Count;
-            };
-
-            Func<List<Patient>, int> assignedPatientCounter = delegate (List<Patient> patients)
-            {
-                return patients.Count(p => p.AssignedDoctorId.HasValue);
-            };
-
-            Func<List<Patient>, int> unassignedPatientCounter = delegate (List<Patient> patients)
-            {
-                return patients.Count(p => !p.AssignedDoctorId.HasValue);
-            };
-
-            Action<string> systemLogger = delegate (string message)
-            {
-                Console.WriteLine($"[System] {message}");
-            };
-
-            systemLogger("Calculating system statistics...");
-
-            Console.WriteLine($"Total Patients: {patientCounter(dataManager.Patients)}");
-            Console.WriteLine($"Total Doctors: {doctorCounter(dataManager.Doctors)}");
-            Console.WriteLine($"Assigned Patients: {assignedPatientCounter(dataManager.Patients)}");
-            Console.WriteLine($"Unassigned Patients: {unassignedPatientCounter(dataManager.Patients)}");
+            Utils.DisplayHeader("System Statistics");
+            Console.WriteLine($"Total Patients: {dataManager.Patients.Count}");
+            Console.WriteLine($"Total Doctors: {dataManager.Doctors.Count}");
+            Console.WriteLine($"Assigned Patients: {dataManager.Patients.Count(p => p.AssignedDoctorId.HasValue)}");
             Console.WriteLine($"Total Appointments: {dataManager.Appointments.Count}");
-
-            systemLogger("Statistics calculation completed");
             Utils.PressAnyKeyToContinue();
         }
-    }
+        #endregion
 
-    /// <summary>
-    /// Receptionist menu handler
-    /// </summary>
-    public class ReceptionistMenuHandler : BaseMenuHandler
-    {
-        protected override int LogoutOption => 5;
-        protected override int ExitOption => 6;
-
-        protected override Dictionary<int, MenuAction> MenuActions { get; }
-
-        public ReceptionistMenuHandler(DataManager dataManager) : base(dataManager)
+        #region Receptionist Menu Handlers
+        private void HandleReceptionistMenu(Receptionist receptionist, int choice)
         {
-            MenuActions = new Dictionary<int, MenuAction>
+            switch (choice)
             {
-                { 1, user => RegisterNewPatient((Receptionist)user) },
-                { 2, user => ViewExistingPatients() },
-                { 3, user => ViewAppointments() },
-                { 4, user => AddNewAppointment((Receptionist)user) }
-            };
+                case 1: RegisterNewPatient(receptionist); break;
+                case 2: ViewExistingPatients(); break;
+                case 3: ViewAppointments(); break;
+                case 4: AddNewAppointment(receptionist); break;
+                default: Console.WriteLine("Invalid option."); Utils.PressAnyKeyToContinue(); break;
+            }
         }
 
         private void RegisterNewPatient(Receptionist receptionist)
         {
             Utils.DisplayHeader("Register New Patient");
-
-            string firstName = Utils.GetStringInput("Patient's First Name: ");
-            string lastName = Utils.GetStringInput("Patient's Last Name: ");
-            string phone = Utils.GetStringInput("Phone Number: ");
-            string email = Utils.GetStringInput("Email Address: ");
-            string address = Utils.GetStringInput("Address: ");
-
-            Patient newPatient = receptionist.RegisterNewPatient(firstName, lastName, phone, email, address);
-            dataManager.AddPatient(newPatient);
-
+            var patient = receptionist.RegisterNewPatient(
+                Utils.GetStringInput("First Name: "),
+                Utils.GetStringInput("Last Name: "),
+                Utils.GetStringInput("Phone: "),
+                Utils.GetStringInput("Email: "),
+                Utils.GetStringInput("Address: ")
+            );
+            dataManager.AddPatient(patient);
             Console.WriteLine("Patient registration completed.");
             Utils.PressAnyKeyToContinue();
         }
@@ -838,54 +494,38 @@ namespace Assignment1_hospital_management_system.SystemManager
         private void ViewExistingPatients()
         {
             Utils.DisplayHeader("View Existing Patients");
-
-            if (dataManager.Patients.Count == 0)
+            if (!dataManager.Patients.Any())
             {
                 Console.WriteLine("No registered patients found.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
 
-            Console.WriteLine($"Registered Patient List (Total: {dataManager.Patients.Count} patients)");
-            Console.WriteLine();
-            Console.WriteLine("ID | Name | Phone Number | Email Address");
+            Console.WriteLine("ID | Name | Phone | Email");
             Console.WriteLine("".PadRight(60, '-'));
-
             foreach (var patient in dataManager.Patients)
-            {
                 Console.WriteLine($"{patient.Id} | {patient.FirstName} {patient.LastName} | {patient.Phone} | {patient.Email}");
-            }
-
             Utils.PressAnyKeyToContinue();
         }
 
         private void ViewAppointments()
         {
             Utils.DisplayHeader("View Appointments");
-
-            if (dataManager.Appointments.Count == 0)
+            if (!dataManager.Appointments.Any())
             {
-                Console.WriteLine("No registered appointments found.");
+                Console.WriteLine("No appointments found.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
 
-            Console.WriteLine($"Appointment List (Total: {dataManager.Appointments.Count} appointments)");
-            Console.WriteLine();
-            Console.WriteLine("Appointment ID | Doctor | Patient | Description");
+            Console.WriteLine("ID | Doctor | Patient | Description");
             Console.WriteLine("".PadRight(70, '-'));
-
             foreach (var appointment in dataManager.Appointments)
             {
                 var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == appointment.DoctorId);
                 var patient = dataManager.Patients.FirstOrDefault(p => p.Id == appointment.PatientId);
-
-                string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "Unknown";
-                string patientName = patient != null ? $"{patient.FirstName} {patient.LastName}" : "Unknown";
-
-                Console.WriteLine($"{appointment.AppointmentId} | {doctorName} | {patientName} | {appointment.Description}");
+                Console.WriteLine($"{appointment.AppointmentId} | Dr. {doctor?.FirstName} {doctor?.LastName} | {patient?.FirstName} {patient?.LastName} | {appointment.Description}");
             }
-
             Utils.PressAnyKeyToContinue();
         }
 
@@ -893,75 +533,39 @@ namespace Assignment1_hospital_management_system.SystemManager
         {
             Utils.DisplayHeader("Add New Appointment");
 
-            if (dataManager.Patients.Count == 0)
+            if (!dataManager.Patients.Any() || !dataManager.Doctors.Any())
             {
-                Console.WriteLine("No patients registered.");
-                Utils.PressAnyKeyToContinue();
-                return;
-            }
-
-            if (dataManager.Doctors.Count == 0)
-            {
-                Console.WriteLine("No doctors registered.");
+                Console.WriteLine("Insufficient data to create appointment.");
                 Utils.PressAnyKeyToContinue();
                 return;
             }
 
             // Patient selection
-            Console.WriteLine("Please select a patient:");
+            Console.WriteLine("Select patient:");
             for (int i = 0; i < dataManager.Patients.Count; i++)
-            {
-                var patient = dataManager.Patients[i];
-                Console.WriteLine($"{i + 1}. {patient.FirstName} {patient.LastName} (ID: {patient.Id})");
-            }
+                Console.WriteLine($"{i + 1}. {dataManager.Patients[i].FirstName} {dataManager.Patients[i].LastName}");
 
             int patientChoice = Utils.GetIntegerInput("Patient number: ") - 1;
-            if (patientChoice < 0 || patientChoice >= dataManager.Patients.Count)
-            {
-                Console.WriteLine("Invalid selection.");
-                Utils.PressAnyKeyToContinue();
-                return;
-            }
-
-            Patient selectedPatient = dataManager.Patients[patientChoice];
+            if (patientChoice < 0 || patientChoice >= dataManager.Patients.Count) return;
 
             // Doctor selection
-            Console.WriteLine();
-            Console.WriteLine("Please select a doctor:");
+            Console.WriteLine("\nSelect doctor:");
             for (int i = 0; i < dataManager.Doctors.Count; i++)
-            {
-                var doctor = dataManager.Doctors[i];
-                Console.WriteLine($"{i + 1}. Dr. {doctor.FirstName} {doctor.LastName} - {doctor.Specialization}");
-            }
+                Console.WriteLine($"{i + 1}. Dr. {dataManager.Doctors[i].FirstName} {dataManager.Doctors[i].LastName}");
 
             int doctorChoice = Utils.GetIntegerInput("Doctor number: ") - 1;
-            if (doctorChoice < 0 || doctorChoice >= dataManager.Doctors.Count)
-            {
-                Console.WriteLine("Invalid selection.");
-                Utils.PressAnyKeyToContinue();
-                return;
-            }
+            if (doctorChoice < 0 || doctorChoice >= dataManager.Doctors.Count) return;
 
-            Doctor selectedDoctor = dataManager.Doctors[doctorChoice];
+            var appointment = receptionist.CreateAppointment(
+                dataManager.Patients[patientChoice].Id,
+                dataManager.Doctors[doctorChoice].Id,
+                Utils.GetStringInput("Description: ")
+            );
 
-            // Appointment description input
-            string description = Utils.GetStringInput("Appointment description: ");
-
-            // Create appointment using receptionist's method
-            Appointment newAppointment = receptionist.CreateAppointment(selectedPatient.Id, selectedDoctor.Id, description);
-
-            // Add appointment to system
-            dataManager.AddAppointment(newAppointment);
-
-            // Assign doctor to patient (if not already assigned)
-            if (!selectedPatient.AssignedDoctorId.HasValue)
-            {
-                selectedPatient.AssignedDoctorId = selectedDoctor.Id;
-                selectedDoctor.AddPatient(selectedPatient.Id);
-            }
-
-            Console.WriteLine("Appointment has been successfully created.");
+            dataManager.AddAppointment(appointment);
+            Console.WriteLine("Appointment created successfully.");
             Utils.PressAnyKeyToContinue();
         }
+        #endregion
     }
 }
