@@ -5,12 +5,10 @@ using System.Linq;
 
 namespace Assignment1_hospital_management_system.Utilities
 {
-    /// <summary>
-    /// 統合されたユーティリティクラス - コード量を削減し機能を統合
-    /// </summary>
+
     public static class Utils
     {
-        // Extension methods - 課題要件を満たす
+        // Extension methods 
         public static bool IsValidEmail(this string email)
         {
             try
@@ -25,7 +23,7 @@ namespace Assignment1_hospital_management_system.Utilities
             !string.IsNullOrWhiteSpace(phone) && phone.Length >= 10 &&
             phone.All(c => char.IsDigit(c) || c == '-' || c == ' ' || c == '(' || c == ')');
 
-        // Generic methods - より簡潔な実装
+        // Generic methods 
         public static T FindById<T>(this IEnumerable<T> items, int id) where T : User =>
             items.FirstOrDefault(u => u.Id == id);
 

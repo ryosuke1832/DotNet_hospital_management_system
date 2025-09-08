@@ -24,7 +24,7 @@ namespace Assignment1_hospital_management_system.SystemManager
 
             Console.WriteLine("\n=== Login ===");
 
-            // ユーザーID入力
+            // inuput user ID
             string userIdInput = Utils.GetStringInput("User ID (enter 'exit' to quit): ");
             if (IsExitCommand(userIdInput)) return ConfirmExit();
 
@@ -35,11 +35,11 @@ namespace Assignment1_hospital_management_system.SystemManager
                 return false;
             }
 
-            // パスワード入力
+            // input password
             string password = Utils.GetPasswordInputWithExit("Password (enter 'exit' to quit): ");
             if (IsExitCommand(password)) return ConfirmExit();
 
-            // 認証処理
+            // authenticate user
             User currentUser = dataManager.FindUser(userId, password);
             if (currentUser != null)
             {

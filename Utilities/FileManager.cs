@@ -409,7 +409,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// 受付嬢データをファイルに保存
+        /// save receptionists to file
         /// </summary>
         public static void SaveReceptionists(List<Receptionist> receptionists)
         {
@@ -432,7 +432,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// ファイルから受付嬢データを読み込み
+        /// load receptionists from file
         /// </summary>
         public static List<Receptionist> LoadReceptionists()
         {
@@ -470,7 +470,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// ファイル行から受付嬢オブジェクトを解析
+        /// analyze receptionist from file line
         /// </summary>
         private static Receptionist ParseReceptionistFromLine(string line)
         {

@@ -95,7 +95,7 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
-        /// ユーザータイプ別のログアウト・終了オプション番号を取得
+        /// returns the logout and exit option numbers based on user type
         /// </summary>
         private (int logout, int exit) GetLogoutExitOptions(User user) => user switch
         {
@@ -103,7 +103,7 @@ namespace Assignment1_hospital_management_system.SystemManager
             Doctor => (6, 7),
             Administrator => (10, 11),
             Receptionist => (5, 6),
-            _ => (99, 100) // デフォルト値
+            _ => (99, 100)
         };
 
         #region Patient Menu Handlers
