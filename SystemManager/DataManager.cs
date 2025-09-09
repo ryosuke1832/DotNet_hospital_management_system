@@ -39,8 +39,6 @@ namespace Assignment1_hospital_management_system.SystemManager
                 {
                     Email = "admin@hospital.com",
                     Password = "admin1234",
-                    Department = "Administration",
-                    AccessLevel = "Full Access"
                 }));
                 dataCreated = true;
             }

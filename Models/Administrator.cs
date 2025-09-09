@@ -10,20 +10,14 @@ namespace Assignment1_hospital_management_system.Models
     // Administrator class
     public class Administrator : User
     {
-        public string Department { get; set; }
-        public string AccessLevel { get; set; }
 
         // Constructors
         public Administrator() : base()
         {
-            AccessLevel = "Full Access";
-            Department = "Administration";
         }
 
         public Administrator(string firstName, string lastName) : base(firstName, lastName)
         {
-            AccessLevel = "Full Access";
-            Department = "Administration";
         }
 
         // Abstract method override - Administrator menu
@@ -58,7 +52,7 @@ namespace Assignment1_hospital_management_system.Models
         // Method override - Administrator-specific display
         public override string ToString()
         {
-            return $"Admin: {FirstName} {LastName} (ID: {Id}) | Department: {Department} | Access: {AccessLevel}";
+            return $"Admin: {FirstName} {LastName} (ID: {Id}) ";
         }
 
 

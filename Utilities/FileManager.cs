@@ -294,7 +294,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 List<string> lines = new List<string>();
                 foreach (Administrator admin in administrators)
                 {
-                    string line = $"{admin.Id},{EscapeCommas(admin.FirstName)},{EscapeCommas(admin.LastName)},{EscapeCommas(admin.Email)},{EscapeCommas(admin.Phone)},{EscapeCommas(admin.Address)},{EscapeCommas(admin.Password)},{EscapeCommas(admin.Department)},{EscapeCommas(admin.AccessLevel)}";
+                    string line = $"{admin.Id},{EscapeCommas(admin.FirstName)},{EscapeCommas(admin.LastName)},{EscapeCommas(admin.Email)},{EscapeCommas(admin.Phone)},{EscapeCommas(admin.Address)},{EscapeCommas(admin.Password)}";
                     lines.Add(line);
                 }
                 File.WriteAllLines(ADMINISTRATORS_FILE, lines);
@@ -356,8 +356,6 @@ namespace Assignment1_hospital_management_system.Utilities
                         Phone = UnescapeCommas(parts[4]),
                         Address = UnescapeCommas(parts[5]),
                         Password = UnescapeCommas(parts[6]),
-                        Department = UnescapeCommas(parts[7]),
-                        AccessLevel = UnescapeCommas(parts[8])
                     };
                 }
             }
@@ -379,7 +377,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 foreach (Receptionist receptionist in receptionists)
                 {
                     // Format: ID,FirstName,LastName,Email,Phone,Address,Password,Department,Shift
-                    string line = $"{receptionist.Id},{EscapeCommas(receptionist.FirstName)},{EscapeCommas(receptionist.LastName)},{EscapeCommas(receptionist.Email)},{EscapeCommas(receptionist.Phone)},{EscapeCommas(receptionist.Address)},{EscapeCommas(receptionist.Password)},{EscapeCommas(receptionist.Department)},{EscapeCommas(receptionist.Shift)}";
+                    string line = $"{receptionist.Id},{EscapeCommas(receptionist.FirstName)},{EscapeCommas(receptionist.LastName)},{EscapeCommas(receptionist.Email)},{EscapeCommas(receptionist.Phone)},{EscapeCommas(receptionist.Address)},{EscapeCommas(receptionist.Password)}";
                     lines.Add(line);
                 }
                 File.WriteAllLines(RECEPTIONISTS_FILE, lines);
@@ -442,8 +440,6 @@ namespace Assignment1_hospital_management_system.Utilities
                         Phone = UnescapeCommas(parts[4]),
                         Address = UnescapeCommas(parts[5]),
                         Password = UnescapeCommas(parts[6]),
-                        Department = UnescapeCommas(parts[7]),
-                        Shift = UnescapeCommas(parts[8])
                     };
                 }
                 else
@@ -548,23 +544,5 @@ namespace Assignment1_hospital_management_system.Utilities
             return text.Replace("&#44;", ","); // Replace HTML entity back to commas
         }
 
-        /// <summary>
-        /// Get file information for debugging purposes
-        /// </summary>
-        public static void DisplayFileInformation()
-        {
-            Console.WriteLine("=== Data Files Information ===");
-            Console.WriteLine($"Current Working Directory: {Directory.GetCurrentDirectory()}");
-            Console.WriteLine($"Project Root Directory: {GetProjectRootDirectory()}");
-            Console.WriteLine($"Data Folder: {DATA_FOLDER}");
-            Console.WriteLine();
-            Console.WriteLine("File Status:");
-            Console.WriteLine($"Patients File: {PATIENTS_FILE} - Exists: {File.Exists(PATIENTS_FILE)}");
-            Console.WriteLine($"Doctors File: {DOCTORS_FILE} - Exists: {File.Exists(DOCTORS_FILE)}");
-            Console.WriteLine($"Administrators File: {ADMINISTRATORS_FILE} - Exists: {File.Exists(ADMINISTRATORS_FILE)}");
-            Console.WriteLine($"Appointments File: {APPOINTMENTS_FILE} - Exists: {File.Exists(APPOINTMENTS_FILE)}");
-            Console.WriteLine($"Receptionists File: {RECEPTIONISTS_FILE} - Exists: {File.Exists(RECEPTIONISTS_FILE)}");
-            Console.WriteLine("=============================");
-        }
     }
 }

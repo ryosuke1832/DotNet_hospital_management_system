@@ -51,9 +51,6 @@ namespace Assignment1_hospital_management_system.Models
         /// <summary>
         /// Constructor with required appointment details
         /// </summary>
-        /// <param name="doctorId">ID of the doctor</param>
-        /// <param name="patientId">ID of the patient</param>
-        /// <param name="description">Description of the appointment</param>
         public Appointment(int doctorId, int patientId, string description) : this()
         {
             DoctorId = doctorId;
@@ -87,8 +84,6 @@ namespace Assignment1_hospital_management_system.Models
         /// <summary>
         /// Create appointment from file format string with error handling
         /// </summary>
-        /// <param name="fileString">CSV formatted string from file</param>
-        /// <returns>Appointment object or null if parsing fails</returns>
         public static Appointment FromFileString(string fileString)
         {
             try

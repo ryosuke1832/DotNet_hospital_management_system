@@ -12,20 +12,15 @@ namespace Assignment1_hospital_management_system.Models
     /// </summary>
     public class Receptionist : User
     {
-        public string Department { get; set; }
         public string Shift { get; set; }
 
         // Constructors
         public Receptionist() : base()
         {
-            Department = "Reception";
-            Shift = "Morning";
         }
 
         public Receptionist(string firstName, string lastName) : base(firstName, lastName)
         {
-            Department = "Reception";
-            Shift = "Morning";
         }
 
         // Abstract method override - Receptionist menu
@@ -55,7 +50,7 @@ namespace Assignment1_hospital_management_system.Models
         // Method override - Receptionist-specific display
         public override string ToString()
         {
-            return $"Receptionist: {FirstName} {LastName} (ID: {Id}) | Department: {Department}";
+            return $"Receptionist: {FirstName} {LastName} (ID: {Id})";
         }
 
         // Receptionist-specific methods 
