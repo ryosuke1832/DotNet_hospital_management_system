@@ -38,7 +38,7 @@ namespace Assignment1_hospital_management_system.Models
             Console.WriteLine("6. Add patient");
             Console.WriteLine("7. Add receptionist");
             Console.WriteLine("8. Show filtered patients"); 
-            Console.WriteLine("9. Show system statistics");
+            Console.WriteLine("9. Show system statistics"); 
             Console.WriteLine("10. Logout");
             Console.WriteLine("11. Exit");
             Console.WriteLine("========================================");
@@ -55,52 +55,5 @@ namespace Assignment1_hospital_management_system.Models
             return $"Admin: {FirstName} {LastName} (ID: {Id}) ";
         }
 
-
-        // Administrator-specific methods - Method overloading examples
-        public void AddUser(Patient patient)
-        {
-            Console.WriteLine($"Patient {patient.FirstName} {patient.LastName} has been successfully added to the system!");
-            Console.WriteLine($"Generated Patient ID: {patient.Id}");
-            // File saving logic would go here
-        }
-
-        public void AddUser(Doctor doctor)
-        {
-            Console.WriteLine($"Doctor {doctor.FirstName} {doctor.LastName} has been successfully added to the system!");
-            Console.WriteLine($"Generated Doctor ID: {doctor.Id}");
-            Console.WriteLine($"Specialization: {doctor.Specialization}");
-            // File saving logic would go here
-        }
-
-        public void AddUser(Receptionist receptionist)
-        {
-            Console.WriteLine($"Receptionist {receptionist.FirstName} {receptionist.LastName} has been successfully added to the system!");
-            Console.WriteLine($"Generated Receptionist ID: {receptionist.Id}");
-        }
-
-        public void AddUser(string userType, string firstName, string lastName)
-        {
-            switch (userType.ToLower())
-            {
-                case "patient":
-                    AddUser(new Patient(firstName, lastName));
-                    break;
-                case "doctor":
-                    AddUser(new Doctor(firstName, lastName, "General Practice"));
-                    break;
-                case "receptionist": 
-                    AddUser(new Receptionist(firstName, lastName));
-                    break;
-                default:
-                    Console.WriteLine("Invalid user type specified");
-                    break;
-            }
-        }
-
-        // Check user details by ID
-        public void CheckUserDetails(int userId, string userType)
-        {
-            Console.WriteLine($"Searching for {userType} with ID: {userId}");
-        }
     }
 }

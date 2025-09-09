@@ -75,17 +75,6 @@ namespace Assignment1_hospital_management_system.Models
             AddPatient(patient.Id);
         }
 
-        // Check patient details by ID
-        public void CheckPatientDetails(int patientId)
-        {
-            if (PatientIds.Contains(patientId))
-            {
-                Console.WriteLine($"Patient ID {patientId} is registered with Dr. {FirstName} {LastName}");
-            }
-            else
-            {
-                Console.WriteLine($"No patient found with ID: {patientId}");
-            }
-        }
+
     }
 }

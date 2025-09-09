@@ -12,7 +12,6 @@ namespace Assignment1_hospital_management_system.Models
     /// </summary>
     public class Receptionist : User
     {
-        public string Shift { get; set; }
 
         // Constructors
         public Receptionist() : base()

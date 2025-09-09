@@ -47,12 +47,6 @@ namespace Assignment1_hospital_management_system.Models
             return $"Patient: {FirstName} {LastName} (ID: {Id}) | Email: {Email} | Phone: {Phone}";
         }
 
-        // Patient-specific method
-        public void BookAppointment(int doctorId, string description)
-        {
-            Console.WriteLine($"Appointment booked successfully with Doctor ID: {doctorId}");
-            Console.WriteLine($"Description: {description}");
-        }
     }
 
 }

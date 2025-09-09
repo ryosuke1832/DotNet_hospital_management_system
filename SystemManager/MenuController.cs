@@ -1,5 +1,6 @@
 ﻿using Assignment1_hospital_management_system.Models;
 using Assignment1_hospital_management_system.Utilities;
+using Assignment1_hospital_management_system.SystemManager;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -307,6 +308,8 @@ namespace Assignment1_hospital_management_system.SystemManager
             }
         }
 
+        #endregion
+
         private void ShowAllDoctors()
         {
             Utils.DisplayHeader("All Doctors");
@@ -327,7 +330,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Console.WriteLine($"Dr. {doctor.FirstName} {doctor.LastName} | {doctor.Email} | {doctor.Phone} | {doctor.Address}");
             else
                 Console.WriteLine($"No doctor found with ID: {doctorId}");
-            Utils.PressAnyKeyToContinue();
+            Utils.PressAnyKeyToContinue(); 
         }
 
         private void ShowAllPatients()
@@ -422,42 +425,77 @@ namespace Assignment1_hospital_management_system.SystemManager
             Utils.PressAnyKeyToContinue();
         }
 
+        // <summary>
+        /// Patient filtering using delegates and anonymous methods 
+        /// </summary>
         private void ShowFilteredPatients()
         {
-            Utils.DisplayHeader("Patient Filtering");
-            Console.WriteLine("1. Patients with assigned doctors\n2. Patients with email\n3. All patients");
+            Utils.DisplayHeader("Patient Filtering with Delegates");
+            Console.WriteLine("1. Patients with assigned doctors");
+            Console.WriteLine("2. Patients with email addresses");
+            Console.WriteLine("3. All patients");
 
             int choice = Utils.GetIntegerInput("Select: ");
-            var filteredPatients = choice switch
+
+            Delegates.UserFilter<Patient> filter = choice switch
             {
-                1 => dataManager.Patients.Where(p => p.AssignedDoctorId.HasValue).ToList(),
-                2 => dataManager.Patients.Where(p => !string.IsNullOrEmpty(p.Email)).ToList(),
-                3 => dataManager.Patients.ToList(),
-                _ => new List<Patient>()
+                1 => delegate (Patient p) { return p.AssignedDoctorId.HasValue; }
+                ,
+                2 => delegate (Patient p) { return !string.IsNullOrEmpty(p.Email); }
+                , 
+                _ => delegate (Patient p) { return true; } 
             };
 
+            var filteredPatients = Delegates.FilterUsers(dataManager.Patients, filter);
+
             Console.WriteLine($"\nFilter Result: {filteredPatients.Count} patients");
-            foreach (var patient in filteredPatients)
-            {
-                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == patient.AssignedDoctorId);
+
+            // Also use display delegate (Bonus requirement)
+            Delegates.DisplayUsers(filteredPatients, delegate (Patient p) {
+                var doctor = dataManager.Doctors.FirstOrDefault(d => d.Id == p.AssignedDoctorId);
                 string doctorName = doctor != null ? $"Dr. {doctor.FirstName} {doctor.LastName}" : "Unassigned";
-                Console.WriteLine($"{patient.FirstName} {patient.LastName} | Doctor: {doctorName} | Email: {patient.Email}");
-            }
+                return $"{p.FirstName} {p.LastName} | Doctor: {doctorName} | Email: {p.Email}";
+            });
+
             Utils.PressAnyKeyToContinue();
         }
 
+
+        /// <summary>
+        /// System statistics display using delegates (Bonus requirement)
+        /// </summary>
         private void ShowSystemStatistics()
         {
-            Utils.DisplayHeader("System Statistics");
-            Console.WriteLine($"Total Patients: {dataManager.Patients.Count}");
-            Console.WriteLine($"Total Doctors: {dataManager.Doctors.Count}");
-            Console.WriteLine($"Assigned Patients: {dataManager.Patients.Count(p => p.AssignedDoctorId.HasValue)}");
-            Console.WriteLine($"Total Appointments: {dataManager.Appointments.Count}");
+            Utils.DisplayHeader("System Statistics with Delegates");
+
+            // Log delegate (Bonus requirement)
+            Delegates.LogAction logger = delegate (string message)
+            {
+                Console.WriteLine($"[LOG] {DateTime.Now:HH:mm:ss} - {message}");
+            };
+
+            // Display statistics using delegates and anonymous methods (Bonus requirement)
+            Delegates.ExecuteWithLogging("System Statistics Calculation", logger, delegate ()
+            {
+                Console.WriteLine($"Total Patients: {dataManager.Patients.Count}");
+                Console.WriteLine($"Total Doctors: {dataManager.Doctors.Count}");
+                Console.WriteLine($"Total Administrators: {dataManager.Administrators.Count}");
+                Console.WriteLine($"Total Receptionists: {dataManager.Receptionists.Count}");
+                Console.WriteLine($"Total Appointments: {dataManager.Appointments.Count}");
+
+                // Calculate statistics using anonymous method
+                var assignedPatients = dataManager.Patients.Where(delegate (Patient p)
+                {
+                    return p.AssignedDoctorId.HasValue;
+                }).Count();
+
+                Console.WriteLine($"Assigned Patients: {assignedPatients}");
+                Console.WriteLine($"Unassigned Patients: {dataManager.Patients.Count - assignedPatients}");
+            });
+
             Utils.PressAnyKeyToContinue();
         }
-        #endregion
 
-        #region Receptionist Menu Handlers
         private void HandleReceptionistMenu(Receptionist receptionist, int choice)
         {
             switch (choice)
@@ -560,6 +598,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             Console.WriteLine("Appointment created successfully.");
             Utils.PressAnyKeyToContinue();
         }
-        #endregion
+
     }
 }

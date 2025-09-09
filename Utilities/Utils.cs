@@ -1,27 +1,13 @@
-﻿using Assignment1_hospital_management_system.Models;
+﻿
+using Assignment1_hospital_management_system.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Assignment1_hospital_management_system.Utilities
 {
-
     public static class Utils
     {
-        // Extension methods 
-        public static bool IsValidEmail(this string email)
-        {
-            try
-            {
-                var addr = new System.Net.Mail.MailAddress(email);
-                return addr.Address == email;
-            }
-            catch { return false; }
-        }
-
-        public static bool IsValidPhone(this string phone) =>
-            !string.IsNullOrWhiteSpace(phone) && phone.Length >= 10 &&
-            phone.All(c => char.IsDigit(c) || c == '-' || c == ' ' || c == '(' || c == ')');
 
         // Generic methods 
         public static T FindById<T>(this IEnumerable<T> items, int id) where T : User =>
@@ -105,9 +91,6 @@ namespace Assignment1_hospital_management_system.Utilities
         public static string GetPasswordInputWithExit(string prompt) => GetPasswordInput(prompt);
     }
 
-    /// <summary>
-    /// Delegates for course requirements - simplified version
-    /// </summary>
     public static class Delegates
     {
         public delegate bool UserFilter<T>(T user) where T : User;

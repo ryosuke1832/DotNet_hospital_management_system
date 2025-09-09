@@ -261,9 +261,5 @@ namespace Assignment1_hospital_management_system.SystemManager
             SaveAllData();
         }
 
-        public string GetSystemStatistics() =>
-            $"Patients: {Patients.Count}, Doctors: {Doctors.Count}, " +
-            $"Admins: {Administrators.Count}, Appointments: {Appointments.Count}, " +
-            $"Receptionists: {Receptionists.Count}";
     }
 }
