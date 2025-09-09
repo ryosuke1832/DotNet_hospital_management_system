@@ -22,11 +22,10 @@ namespace Assignment1_hospital_management_system.SystemManager
 
         public void Initialize()
         {
-            Console.WriteLine("=== Initializing Data Manager ===");
             FileManager.InitializeDataFiles();
             LoadAllData();
             CreateSampleDataIfNeeded();
-            Console.WriteLine("=== Data Manager initialized successfully ===");
+
         }
 
         private void CreateSampleDataIfNeeded()
@@ -146,7 +145,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 }
             }
 
-            Console.WriteLine($"Created {typeof(T).Name}: {firstName} {lastName} (ID: {user.Id})");
+
             return user;
         }
 
@@ -160,8 +159,6 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Appointments = FileManager.LoadAppointments();
                 Receptionists = FileManager.LoadReceptionists();
 
-                Console.WriteLine($"Loaded: {Patients.Count} patients, {Doctors.Count} doctors, " +
-                    $"{Administrators.Count} admins, {Appointments.Count} appointments, {Receptionists.Count} receptionists");
             }
             catch (Exception ex)
             {
@@ -207,18 +204,15 @@ namespace Assignment1_hospital_management_system.SystemManager
         /// </summary>
         public void ShowMemoryUsageAndCleanup()
         {
-            Console.WriteLine("=== Memory Management ===");
 
             long memoryBefore = GC.GetTotalMemory(false);
-            Console.WriteLine($"Memory before GC: {memoryBefore / 1024:N0} KB");
 
             GC.Collect();
             GC.WaitForPendingFinalizers();
             GC.Collect();
 
             long memoryAfter = GC.GetTotalMemory(true);
-            Console.WriteLine($"Memory after GC: {memoryAfter / 1024:N0} KB");
-            Console.WriteLine($"Memory freed: {(memoryBefore - memoryAfter) / 1024:N0} KB");
+
         }
 
         public void SaveAllData()

@@ -46,18 +46,14 @@ namespace Assignment1_hospital_management_system.Utilities
         {
             try
             {
-                Console.WriteLine($"Project root directory: {GetProjectRootDirectory()}");
-                Console.WriteLine($"Data folder path: {DATA_FOLDER}");
 
                 // Create Data folder if it doesn't exist
                 if (!Directory.Exists(DATA_FOLDER))
                 {
                     Directory.CreateDirectory(DATA_FOLDER);
-                    Console.WriteLine($"Created data folder: {DATA_FOLDER}");
                 }
                 else
                 {
-                    Console.WriteLine($"Data folder exists: {DATA_FOLDER}");
                 }
 
                 // Create individual data files with empty content if they don't exist
@@ -67,7 +63,6 @@ namespace Assignment1_hospital_management_system.Utilities
                 CreateFileIfNotExists(APPOINTMENTS_FILE);
                 CreateFileIfNotExists(RECEPTIONISTS_FILE);
 
-                Console.WriteLine("Data files initialization completed.");
             }
             catch (Exception ex)
             {
@@ -85,13 +80,10 @@ namespace Assignment1_hospital_management_system.Utilities
             {
                 if (!File.Exists(filePath))
                 {
-                    File.WriteAllText(filePath, ""); // Create empty file
-                    Console.WriteLine($"Created empty data file: {filePath}");
+                    File.WriteAllText(filePath, ""); 
+
                 }
-                else
-                {
-                    Console.WriteLine($"Data file exists: {filePath}");
-                }
+
             }
             catch (Exception ex)
             {
@@ -114,7 +106,6 @@ namespace Assignment1_hospital_management_system.Utilities
                     lines.Add(line);
                 }
                 File.WriteAllLines(PATIENTS_FILE, lines);
-                Console.WriteLine($"Successfully saved {patients.Count} patients to {PATIENTS_FILE}");
             }
             catch (Exception ex)
             {
@@ -133,7 +124,6 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(PATIENTS_FILE))
                 {
                     string[] lines = File.ReadAllLines(PATIENTS_FILE);
-                    Console.WriteLine($"Reading {lines.Length} lines from {PATIENTS_FILE}");
 
                     foreach (string line in lines)
                     {
@@ -146,11 +136,6 @@ namespace Assignment1_hospital_management_system.Utilities
                             }
                         }
                     }
-                    Console.WriteLine($"Successfully loaded {patients.Count} patients from {PATIENTS_FILE}");
-                }
-                else
-                {
-                    Console.WriteLine($"Patients file not found: {PATIENTS_FILE} - will be created when needed");
                 }
             }
             catch (Exception ex)
@@ -190,10 +175,6 @@ namespace Assignment1_hospital_management_system.Utilities
 
                     return patient;
                 }
-                else
-                {
-                    Console.WriteLine($"Invalid patient data format: {line}");
-                }
             }
             catch (Exception ex)
             {
@@ -218,7 +199,6 @@ namespace Assignment1_hospital_management_system.Utilities
                     lines.Add(line);
                 }
                 File.WriteAllLines(DOCTORS_FILE, lines);
-                Console.WriteLine($"Successfully saved {doctors.Count} doctors to {DOCTORS_FILE}");
             }
             catch (Exception ex)
             {
@@ -237,7 +217,6 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(DOCTORS_FILE))
                 {
                     string[] lines = File.ReadAllLines(DOCTORS_FILE);
-                    Console.WriteLine($"Reading {lines.Length} lines from {DOCTORS_FILE}");
 
                     foreach (string line in lines)
                     {
@@ -250,11 +229,6 @@ namespace Assignment1_hospital_management_system.Utilities
                             }
                         }
                     }
-                    Console.WriteLine($"Successfully loaded {doctors.Count} doctors from {DOCTORS_FILE}");
-                }
-                else
-                {
-                    Console.WriteLine($"Doctors file not found: {DOCTORS_FILE} - will be created when needed");
                 }
             }
             catch (Exception ex)
@@ -301,10 +275,7 @@ namespace Assignment1_hospital_management_system.Utilities
 
                     return doctor;
                 }
-                else
-                {
-                    Console.WriteLine($"Invalid doctor data format: {line}");
-                }
+
             }
             catch (Exception ex)
             {
@@ -327,7 +298,6 @@ namespace Assignment1_hospital_management_system.Utilities
                     lines.Add(line);
                 }
                 File.WriteAllLines(ADMINISTRATORS_FILE, lines);
-                Console.WriteLine($"Successfully saved {administrators.Count} administrators to {ADMINISTRATORS_FILE}");
             }
             catch (Exception ex)
             {
@@ -346,7 +316,6 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(ADMINISTRATORS_FILE))
                 {
                     string[] lines = File.ReadAllLines(ADMINISTRATORS_FILE);
-                    Console.WriteLine($"Reading {lines.Length} lines from {ADMINISTRATORS_FILE}");
 
                     foreach (string line in lines)
                     {
@@ -359,11 +328,6 @@ namespace Assignment1_hospital_management_system.Utilities
                             }
                         }
                     }
-                    Console.WriteLine($"Successfully loaded {administrators.Count} administrators from {ADMINISTRATORS_FILE}");
-                }
-                else
-                {
-                    Console.WriteLine($"Administrators file not found: {ADMINISTRATORS_FILE} - will be created when needed");
                 }
             }
             catch (Exception ex)
@@ -396,10 +360,6 @@ namespace Assignment1_hospital_management_system.Utilities
                         AccessLevel = UnescapeCommas(parts[8])
                     };
                 }
-                else
-                {
-                    Console.WriteLine($"Invalid administrator data format: {line}");
-                }
             }
             catch (Exception ex)
             {
@@ -423,7 +383,6 @@ namespace Assignment1_hospital_management_system.Utilities
                     lines.Add(line);
                 }
                 File.WriteAllLines(RECEPTIONISTS_FILE, lines);
-                Console.WriteLine($"Successfully saved {receptionists.Count} receptionists to {RECEPTIONISTS_FILE}");
             }
             catch (Exception ex)
             {
@@ -442,7 +401,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(RECEPTIONISTS_FILE))
                 {
                     string[] lines = File.ReadAllLines(RECEPTIONISTS_FILE);
-                    Console.WriteLine($"Reading {lines.Length} lines from {RECEPTIONISTS_FILE}");
+
 
                     foreach (string line in lines)
                     {
@@ -455,11 +414,6 @@ namespace Assignment1_hospital_management_system.Utilities
                             }
                         }
                     }
-                    Console.WriteLine($"Successfully loaded {receptionists.Count} receptionists from {RECEPTIONISTS_FILE}");
-                }
-                else
-                {
-                    Console.WriteLine($"Receptionists file not found: {RECEPTIONISTS_FILE} - will be created when needed");
                 }
             }
             catch (Exception ex)
@@ -517,7 +471,6 @@ namespace Assignment1_hospital_management_system.Utilities
                     lines.Add(appointment.ToFileString());
                 }
                 File.WriteAllLines(APPOINTMENTS_FILE, lines);
-                Console.WriteLine($"Successfully saved {appointments.Count} appointments to {APPOINTMENTS_FILE}");
             }
             catch (Exception ex)
             {
@@ -536,7 +489,6 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(APPOINTMENTS_FILE))
                 {
                     string[] lines = File.ReadAllLines(APPOINTMENTS_FILE);
-                    Console.WriteLine($"Reading {lines.Length} lines from {APPOINTMENTS_FILE}");
 
                     foreach (string line in lines)
                     {
@@ -549,12 +501,9 @@ namespace Assignment1_hospital_management_system.Utilities
                             }
                         }
                     }
-                    Console.WriteLine($"Successfully loaded {appointments.Count} appointments from {APPOINTMENTS_FILE}");
+
                 }
-                else
-                {
-                    Console.WriteLine($"Appointments file not found: {APPOINTMENTS_FILE} - will be created when needed");
-                }
+
             }
             catch (Exception ex)
             {

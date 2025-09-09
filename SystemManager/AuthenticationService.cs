@@ -18,7 +18,6 @@ namespace Assignment1_hospital_management_system.SystemManager
         public bool HandleLogin(MenuController menuController)
         {
             Utils.DisplayHeader("Login");
-            DisplayAvailableAccounts();
 
             Console.WriteLine("\n=== Login ===");
 
@@ -53,31 +52,7 @@ namespace Assignment1_hospital_management_system.SystemManager
             }
         }
 
-        private void DisplayAvailableAccounts()
-        {
-            Console.WriteLine("=== Available Test Accounts ===");
 
-            DisplayUserGroup("Administrator", dataManager.Administrators);
-            DisplayUserGroup("Doctor", dataManager.Doctors);
-            DisplayUserGroup("Patient", dataManager.Patients);
-            DisplayUserGroup("Receptionist", dataManager.Receptionists);
-
-            Console.WriteLine("================================");
-        }
-
-        private void DisplayUserGroup<T>(string groupName, System.Collections.Generic.List<T> users) where T : User
-        {
-            if (users.Any())
-            {
-                Console.WriteLine($"【{groupName} Accounts】");
-                foreach (var user in users)
-                {
-                    string prefix = user is Doctor ? "Dr. " : "";
-                    Console.WriteLine($"  ID: {user.Id} | Name: {prefix}{user.FirstName} {user.LastName} | Password: {user.Password}");
-                }
-                Console.WriteLine();
-            }
-        }
 
         private bool IsExitCommand(string input) =>
             !string.IsNullOrWhiteSpace(input) &&
