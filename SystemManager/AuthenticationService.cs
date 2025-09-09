@@ -5,9 +5,7 @@ using System.Linq;
 
 namespace Assignment1_hospital_management_system.SystemManager
 {
-    /// <summary>
-    /// 簡略化された認証サービス
-    /// </summary>
+
     public class AuthenticationService
     {
         private DataManager dataManager;

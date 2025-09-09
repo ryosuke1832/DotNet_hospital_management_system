@@ -7,7 +7,7 @@ using System.Linq;
 namespace Assignment1_hospital_management_system.SystemManager
 {
     /// <summary>
-    /// 統合されたメニューコントローラー - コード量を大幅削減
+    /// Menu controller
     /// </summary>
     public class MenuController
     {
@@ -18,9 +18,7 @@ namespace Assignment1_hospital_management_system.SystemManager
             this.dataManager = dataManager;
         }
 
-        /// <summary>
-        /// ユーザータイプに応じたメニュー表示とハンドリング
-        /// </summary>
+
         public bool ShowUserMenu(User currentUser)
         {
             bool logout = false;
@@ -53,17 +51,14 @@ namespace Assignment1_hospital_management_system.SystemManager
             return exitSystem;
         }
 
-        /// <summary>
-        /// 統一されたメニュー選択処理 - switch文で各ユーザータイプを処理
-        /// </summary>
         private (bool logout, bool exit) HandleMenuChoice(User user, int choice)
         {
-            // 共通のログアウト・終了処理
+            // log out and exit
             var logoutExitOptions = GetLogoutExitOptions(user);
             if (choice == logoutExitOptions.logout) return (true, false);
             if (choice == logoutExitOptions.exit) return (false, true);
 
-            // ユーザータイプ別の処理
+            // based on user type
             try
             {
                 switch (user)
@@ -172,7 +167,6 @@ namespace Assignment1_hospital_management_system.SystemManager
         {
             Utils.DisplayHeader("Book Appointment");
 
-            // 医師が割り当てられていない場合は選択させる
             if (!patient.AssignedDoctorId.HasValue)
             {
                 Console.WriteLine("Choose a doctor to register with:");

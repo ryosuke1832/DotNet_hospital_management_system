@@ -58,10 +58,10 @@ namespace Assignment1_hospital_management_system.Models
             return $"Receptionist: {FirstName} {LastName} (ID: {Id}) | Department: {Department}";
         }
 
-        // Receptionist-specific methods - Method overloading examples
+        // Receptionist-specific methods 
 
         /// <summary>
-        /// Register new patient (Method overloading example)
+        /// Register new patient
         /// </summary>
         public Patient RegisterNewPatient(string firstName, string lastName, string phone)
         {
@@ -81,7 +81,7 @@ namespace Assignment1_hospital_management_system.Models
         }
 
         /// <summary>
-        /// Register new patient (Full information version - Method overloading example)
+        /// Register new patient
         /// </summary>
         public Patient RegisterNewPatient(string firstName, string lastName, string phone, string email, string address)
         {
@@ -100,7 +100,7 @@ namespace Assignment1_hospital_management_system.Models
         }
 
         /// <summary>
-        /// Create appointment (Method overloading example)
+        /// Create appointment
         /// </summary>
         public Appointment CreateAppointment(int patientId, int doctorId, string description)
         {
@@ -113,7 +113,7 @@ namespace Assignment1_hospital_management_system.Models
         }
 
         /// <summary>
-        /// Create appointment (Patient object version - Method overloading example)
+        /// Create appointment 
         /// </summary>
         public Appointment CreateAppointment(Patient patient, Doctor doctor, string description)
         {

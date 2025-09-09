@@ -7,7 +7,7 @@ using System.Linq;
 namespace Assignment1_hospital_management_system.SystemManager
 {
     /// <summary>
-    /// 簡略化されたデータマネージャー - サンプルデータ作成ロジックを統合
+    /// data manager - handles loading, saving, and managing all system data
     /// </summary>
     public class DataManager
     {
@@ -29,14 +29,11 @@ namespace Assignment1_hospital_management_system.SystemManager
             Console.WriteLine("=== Data Manager initialized successfully ===");
         }
 
-        /// <summary>
-        /// サンプルデータ作成 - 統合された簡略版
-        /// </summary>
         private void CreateSampleDataIfNeeded()
         {
             bool dataCreated = false;
 
-            // 管理者作成
+
             if (!Administrators.Any())
             {
                 Administrators.Add(CreateUser<Administrator>("System", "Administrator", new
@@ -49,7 +46,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 dataCreated = true;
             }
 
-            // 医師作成  
+
             if (!Doctors.Any())
             {
                 var doctorData = new[]
@@ -70,7 +67,6 @@ namespace Assignment1_hospital_management_system.SystemManager
                 dataCreated = true;
             }
 
-            // 患者作成
             if (!Patients.Any())
             {
                 var patientData = new[]
@@ -92,7 +88,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 dataCreated = true;
             }
 
-            // 受付嬢作成
+
             if (!Receptionists.Any())
             {
                 Receptionists.Add(CreateUser<Receptionist>("Lisa", "Anderson", new
@@ -103,7 +99,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 dataCreated = true;
             }
 
-            // 予約作成とアサイン
+ 
             if (!Appointments.Any() && Doctors.Any() && Patients.Any())
             {
                 for (int i = 0; i < Math.Min(Doctors.Count, Patients.Count); i++)
@@ -125,7 +121,7 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
-        /// Generic user creation helper - リフレクションを使って簡略化
+        /// Generic user creation helper
         /// </summary>
         private T CreateUser<T>(string firstName, string lastName, object additionalProperties) where T : User, new()
         {
@@ -137,7 +133,7 @@ namespace Assignment1_hospital_management_system.SystemManager
                 Address = "123 Sample Street, Sydney, NSW"
             };
 
-            // additionalPropertiesのプロパティを設定
+            // additionalProperties
             var userType = typeof(T);
             var props = additionalProperties.GetType().GetProperties();
 
@@ -207,7 +203,7 @@ namespace Assignment1_hospital_management_system.SystemManager
         }
 
         /// <summary>
-        /// ガベージコレクション example - 課題要件
+        /// Gabage collection and memory usage display
         /// </summary>
         public void ShowMemoryUsageAndCleanup()
         {

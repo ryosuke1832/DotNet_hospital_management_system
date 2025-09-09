@@ -10,7 +10,6 @@ namespace Assignment1_hospital_management_system
     /// Main program entry point - creates and runs the hospital management system
     class Program
     {
-        /// <param name="args">Command line arguments</param>
         static void Main(string[] args)
         {
             try

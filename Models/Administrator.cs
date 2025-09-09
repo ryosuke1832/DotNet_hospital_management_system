@@ -107,7 +107,6 @@ namespace Assignment1_hospital_management_system.Models
         public void CheckUserDetails(int userId, string userType)
         {
             Console.WriteLine($"Searching for {userType} with ID: {userId}");
-            // Logic to search and display user details would go here
         }
     }
 }
