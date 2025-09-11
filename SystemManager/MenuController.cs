@@ -1,9 +1,6 @@
 ﻿using Assignment1_hospital_management_system.Models;
 using Assignment1_hospital_management_system.Utilities;
-using Assignment1_hospital_management_system.SystemManager;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 
 namespace Assignment1_hospital_management_system.SystemManager
 {
@@ -102,7 +99,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             _ => (99, 100)
         };
 
-        #region Patient Menu Handlers
         private void HandlePatientMenu(Patient patient, int choice)
         {
             switch (choice)
@@ -123,7 +119,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             Console.WriteLine($"Address: {patient.Address}");
             Console.WriteLine($"Email: {patient.Email}");
             Console.WriteLine($"Phone: {patient.Phone}");
-            Console.WriteLine($"Medical History: {patient.MedicalHistory}");
             Utils.PressAnyKeyToContinue();
         }
 
@@ -198,9 +193,8 @@ namespace Assignment1_hospital_management_system.SystemManager
             Console.WriteLine("Appointment booked successfully!");
             Utils.PressAnyKeyToContinue();
         }
-        #endregion
 
-        #region Doctor Menu Handlers
+
         private void HandleDoctorMenu(Doctor doctor, int choice)
         {
             switch (choice)
@@ -288,9 +282,7 @@ namespace Assignment1_hospital_management_system.SystemManager
             else Console.WriteLine($"No appointments found with patient ID: {patientId}");
             Utils.PressAnyKeyToContinue();
         }
-        #endregion
-
-        #region Admin Menu Handlers  
+    
         private void HandleAdminMenu(Administrator admin, int choice)
         {
             switch (choice)
@@ -308,7 +300,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             }
         }
 
-        #endregion
 
         private void ShowAllDoctors()
         {
@@ -369,37 +360,49 @@ namespace Assignment1_hospital_management_system.SystemManager
         private void AddDoctor()
         {
             Utils.DisplayHeader("Add Doctor");
+
             var doctor = new Doctor(
                 Utils.GetStringInput("First Name: "),
                 Utils.GetStringInput("Last Name: "),
                 Utils.GetStringInput("Specialization: ")
-            )
+            );
+
+            string email = Utils.GetStringInput("Email: ");
+            if (!email.IsValidEmail())
             {
-                Email = Utils.GetStringInput("Email: "),
-                Phone = Utils.GetStringInput("Phone: "),
-                Address = Utils.GetStringInput("Address: "),
-                Password = "password123"
-            };
+                Console.WriteLine("Warning: Invalid email format entered.");
+                Console.WriteLine("Email will be saved as provided, but may not be valid.");
+            }
+            doctor.Email = email;
+
+            doctor.Phone = Utils.GetStringInput("Phone: ");
+            doctor.Address = Utils.GetStringInput("Address: ");
+            doctor.Password = "doctor123";
 
             dataManager.AddDoctor(doctor);
             Console.WriteLine($"Dr {doctor.FirstName} {doctor.LastName} added! ID: {doctor.Id}");
             Utils.PressAnyKeyToContinue();
         }
-
         private void AddPatient()
         {
             Utils.DisplayHeader("Add Patient");
+
             var patient = new Patient(
                 Utils.GetStringInput("First Name: "),
                 Utils.GetStringInput("Last Name: ")
-            )
+            );
+
+            string email = Utils.GetStringInput("Email: ");
+            if (!email.IsValidEmail())
             {
-                Email = Utils.GetStringInput("Email: "),
-                Phone = Utils.GetStringInput("Phone: "),
-                Address = Utils.GetStringInput("Address: "),
-                Password = "password123",
-                MedicalHistory = "No significant medical history"
-            };
+                Console.WriteLine("Warning: Invalid email format entered.");
+                Console.WriteLine("Email will be saved as provided, but may not be valid.");
+            }
+            patient.Email = email;
+
+            patient.Phone = Utils.GetStringInput("Phone: ");
+            patient.Address = Utils.GetStringInput("Address: ");
+            patient.Password = "patient123";
 
             dataManager.AddPatient(patient);
             Console.WriteLine($"{patient.FirstName} {patient.LastName} added! ID: {patient.Id}");
@@ -409,22 +412,29 @@ namespace Assignment1_hospital_management_system.SystemManager
         private void AddReceptionist()
         {
             Utils.DisplayHeader("Add Receptionist");
+
             var receptionist = new Receptionist(
                 Utils.GetStringInput("First Name: "),
                 Utils.GetStringInput("Last Name: ")
-            )
+            );
+            string email = Utils.GetStringInput("Email: ");
+            if (!email.IsValidEmail())
             {
-                Email = Utils.GetStringInput("Email: "),
-                Phone = Utils.GetStringInput("Phone: "),
-                Address = Utils.GetStringInput("Address: "),
-                Password = "reception123"
-            };
+                Console.WriteLine("Warning: Invalid email format entered.");
+                Console.WriteLine("Email will be saved as provided, but may not be valid.");
+            }
+            receptionist.Email = email;
+
+            receptionist.Phone = Utils.GetStringInput("Phone: ");
+            receptionist.Address = Utils.GetStringInput("Address: ");
+            receptionist.Password = "reception123";
 
             dataManager.AddReceptionist(receptionist);
             Console.WriteLine($"{receptionist.FirstName} {receptionist.LastName} added! ID: {receptionist.Id}");
             Utils.PressAnyKeyToContinue();
         }
-
+        
+        
         // <summary>
         /// Patient filtering using delegates and anonymous methods 
         /// </summary>

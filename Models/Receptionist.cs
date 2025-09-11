@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
 
 namespace Assignment1_hospital_management_system.Models
 {
     /// <summary>
     /// Receptionist class - responsible for hospital reception tasks
-    /// Features: New patient registration, existing patient viewing, appointment list display, appointment addition
     /// </summary>
     public class Receptionist : User
     {

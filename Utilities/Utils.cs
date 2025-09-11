@@ -1,8 +1,6 @@
 ﻿
 using Assignment1_hospital_management_system.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+
 
 namespace Assignment1_hospital_management_system.Utilities
 {

@@ -1,10 +1,5 @@
 ﻿using Assignment1_hospital_management_system.Models;
 using Assignment1_hospital_management_system.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Assignment1_hospital_management_system.SystemManager
 {
@@ -63,7 +58,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             dataManager.Initialize();
             dataManager.RegisterExistingIds();
 
-            System.Threading.Thread.Sleep(1000);
         }
 
 

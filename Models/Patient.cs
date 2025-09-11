@@ -9,7 +9,6 @@ namespace Assignment1_hospital_management_system.Models
     // Patient class
     public class Patient : User
     {
-        public string MedicalHistory { get; set; }
         public int? AssignedDoctorId { get; set; }
 
         // Constructors

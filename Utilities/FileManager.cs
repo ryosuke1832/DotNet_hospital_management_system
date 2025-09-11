@@ -1,10 +1,5 @@
 ﻿using Assignment1_hospital_management_system.Models;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
+
 
 namespace Assignment1_hospital_management_system.Utilities
 {
@@ -102,7 +97,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 foreach (Patient patient in patients)
                 {
                     // Format: ID,FirstName,LastName,Email,Phone,Address,Password,MedicalHistory,AssignedDoctorId
-                    string line = $"{patient.Id},{EscapeCommas(patient.FirstName)},{EscapeCommas(patient.LastName)},{EscapeCommas(patient.Email)},{EscapeCommas(patient.Phone)},{EscapeCommas(patient.Address)},{EscapeCommas(patient.Password)},{EscapeCommas(patient.MedicalHistory)},{patient.AssignedDoctorId}";
+                    string line = $"{patient.Id},{EscapeCommas(patient.FirstName)},{EscapeCommas(patient.LastName)},{EscapeCommas(patient.Email)},{EscapeCommas(patient.Phone)},{EscapeCommas(patient.Address)},{EscapeCommas(patient.Password)},{patient.AssignedDoctorId}";
                     lines.Add(line);
                 }
                 File.WriteAllLines(PATIENTS_FILE, lines);
@@ -164,7 +159,6 @@ namespace Assignment1_hospital_management_system.Utilities
                         Phone = UnescapeCommas(parts[4]),
                         Address = UnescapeCommas(parts[5]),
                         Password = UnescapeCommas(parts[6]),
-                        MedicalHistory = UnescapeCommas(parts[7])
                     };
 
                     // Handle AssignedDoctorId which might be null

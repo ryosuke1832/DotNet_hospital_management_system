@@ -1,7 +1,6 @@
 ﻿using Assignment1_hospital_management_system.Models;
 using Assignment1_hospital_management_system.Utilities;
-using System;
-using System.Linq;
+
 
 namespace Assignment1_hospital_management_system.SystemManager
 {
@@ -41,7 +40,6 @@ namespace Assignment1_hospital_management_system.SystemManager
             if (currentUser != null)
             {
                 Console.WriteLine("Authentication successful! Logging in...");
-                System.Threading.Thread.Sleep(1000);
                 return menuController.ShowUserMenu(currentUser);
             }
             else
@@ -66,13 +64,11 @@ namespace Assignment1_hospital_management_system.SystemManager
             if (new[] { "y", "yes" }.Contains(confirmation.Trim().ToLower()))
             {
                 Console.WriteLine("Exiting the system...");
-                System.Threading.Thread.Sleep(1000);
                 return true;
             }
             else
             {
                 Console.WriteLine("Returning to login screen...");
-                System.Threading.Thread.Sleep(1000);
                 return false;
             }
         }

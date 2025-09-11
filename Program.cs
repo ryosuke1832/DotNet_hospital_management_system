@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System;
+﻿
 using Assignment1_hospital_management_system.SystemManager;
 
 namespace Assignment1_hospital_management_system

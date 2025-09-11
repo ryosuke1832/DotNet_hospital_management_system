@@ -1,10 +1,5 @@
 ﻿using Assignment1_hospital_management_system.SystemManager;
-using Assignment1_hospital_management_system.Utilities;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Assignment1_hospital_management_system.Models
 {
@@ -61,7 +56,6 @@ namespace Assignment1_hospital_management_system.Models
         /// <summary>
         /// Override ToString for display purposes
         /// </summary>
-        /// <returns>Formatted string representation of appointment</returns>
         public override string ToString()
         {
             return $"Appointment ID: {AppointmentId} | Doctor ID: {DoctorId} | Patient ID: {PatientId} | Description: {Description} | Status: {Status}";
@@ -71,7 +65,6 @@ namespace Assignment1_hospital_management_system.Models
         /// Convert appointment to file format string with comma escaping
         /// Format: AppointmentId,DoctorId,PatientId,Description,CreatedDate,Status
         /// </summary>
-        /// <returns>CSV formatted string for file storage</returns>
         public string ToFileString()
         {
             // Escape commas in description and status to prevent CSV parsing issues
@@ -147,8 +140,6 @@ namespace Assignment1_hospital_management_system.Models
         /// <summary>
         /// Escape commas in text fields to prevent CSV parsing issues
         /// </summary>
-        /// <param name="text">Text to escape</param>
-        /// <returns>Text with escaped commas</returns>
         private static string EscapeCommas(string text)
         {
             if (string.IsNullOrEmpty(text))
@@ -160,8 +151,6 @@ namespace Assignment1_hospital_management_system.Models
         /// <summary>
         /// Unescape commas in text fields when reading from file
         /// </summary>
-        /// <param name="text">Text to unescape</param>
-        /// <returns>Text with unescaped commas</returns>
         private static string UnescapeCommas(string text)
         {
             if (string.IsNullOrEmpty(text))
@@ -173,7 +162,6 @@ namespace Assignment1_hospital_management_system.Models
         /// <summary>
         /// Update appointment status
         /// </summary>
-        /// <param name="newStatus">New status for the appointment</param>
         public void UpdateStatus(string newStatus)
         {
             if (!string.IsNullOrWhiteSpace(newStatus))
@@ -186,7 +174,6 @@ namespace Assignment1_hospital_management_system.Models
         /// <summary>
         /// Update appointment description
         /// </summary>
-        /// <param name="newDescription">New description for the appointment</param>
         public void UpdateDescription(string newDescription)
         {
             Description = newDescription ?? string.Empty;
@@ -196,7 +183,6 @@ namespace Assignment1_hospital_management_system.Models
         /// <summary>
         /// Get formatted appointment information for display
         /// </summary>
-        /// <returns>Formatted appointment information</returns>
         public string GetFormattedInfo()
         {
             return $"Appointment #{AppointmentId}\n" +
