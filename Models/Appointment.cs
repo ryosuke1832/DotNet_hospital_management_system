@@ -1,6 +1,5 @@
 ﻿using Assignment1_hospital_management_system.SystemManager;
 
-
 namespace Assignment1_hospital_management_system.Models
 {
     /// <summary>
@@ -20,8 +19,6 @@ namespace Assignment1_hospital_management_system.Models
         {
             _dataManager = dataManager;
         }
-
-
 
         /// <summary>
         /// Default constructor - generates new appointment with unique ID
@@ -62,20 +59,20 @@ namespace Assignment1_hospital_management_system.Models
         }
 
         /// <summary>
-        /// Convert appointment to file format string with comma escaping
-        /// Format: AppointmentId,DoctorId,PatientId,Description,CreatedDate,Status
+        /// Convert appointment to file format string with pipe delimiter
+        /// Format: AppointmentId|DoctorId|PatientId|Description|CreatedDate|Status
         /// </summary>
         public string ToFileString()
         {
-            // Escape commas in description and status to prevent CSV parsing issues
-            string escapedDescription = EscapeCommas(Description);
-            string escapedStatus = EscapeCommas(Status);
+            // Clean text to remove pipe characters
+            string cleanDescription = CleanTextForPipe(Description);
+            string cleanStatus = CleanTextForPipe(Status);
 
-            return $"{AppointmentId},{DoctorId},{PatientId},{escapedDescription},{CreatedDate:yyyy-MM-dd HH:mm:ss},{escapedStatus}";
+            return $"{AppointmentId}|{DoctorId}|{PatientId}|{cleanDescription}|{CreatedDate:yyyy-MM-dd HH:mm:ss}|{cleanStatus}";
         }
 
         /// <summary>
-        /// Create appointment from file format string with error handling
+        /// Create appointment from file format string with pipe delimiter
         /// </summary>
         public static Appointment FromFileString(string fileString)
         {
@@ -87,7 +84,7 @@ namespace Assignment1_hospital_management_system.Models
                     return null;
                 }
 
-                string[] parts = fileString.Split(',');
+                string[] parts = fileString.Split('|');
                 if (parts.Length >= 6)
                 {
                     // Parse appointment data with validation
@@ -120,9 +117,9 @@ namespace Assignment1_hospital_management_system.Models
                         AppointmentId = appointmentId,
                         DoctorId = doctorId,
                         PatientId = patientId,
-                        Description = UnescapeCommas(parts[3]),
+                        Description = parts[3] ?? string.Empty,
                         CreatedDate = createdDate,
-                        Status = UnescapeCommas(parts[5])
+                        Status = parts[5] ?? "Scheduled"
                     };
                 }
                 else
@@ -138,25 +135,15 @@ namespace Assignment1_hospital_management_system.Models
         }
 
         /// <summary>
-        /// Escape commas in text fields to prevent CSV parsing issues
+        /// Clean text to remove pipe characters that might interfere with parsing
         /// </summary>
-        private static string EscapeCommas(string text)
+        private static string CleanTextForPipe(string text)
         {
             if (string.IsNullOrEmpty(text))
                 return string.Empty;
 
-            return text.Replace(",", "&#44;"); // Replace commas with HTML entity
-        }
-
-        /// <summary>
-        /// Unescape commas in text fields when reading from file
-        /// </summary>
-        private static string UnescapeCommas(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return string.Empty;
-
-            return text.Replace("&#44;", ","); // Replace HTML entity back to commas
+            // Replace pipe characters with dash to prevent parsing issues
+            return text.Replace("|", "-");
         }
 
         /// <summary>

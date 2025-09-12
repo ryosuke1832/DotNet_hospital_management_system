@@ -1,10 +1,10 @@
 ﻿using Assignment1_hospital_management_system.Models;
 
-
 namespace Assignment1_hospital_management_system.Utilities
 {
     /// <summary>
     /// FileManager class - handles all file operations with Data folder structure
+    /// パイプ区切り（|）形式を使用してCSVの問題を解決
     /// </summary>
     public static class FileManager
     {
@@ -41,14 +41,10 @@ namespace Assignment1_hospital_management_system.Utilities
         {
             try
             {
-
                 // Create Data folder if it doesn't exist
                 if (!Directory.Exists(DATA_FOLDER))
                 {
                     Directory.CreateDirectory(DATA_FOLDER);
-                }
-                else
-                {
                 }
 
                 // Create individual data files with empty content if they don't exist
@@ -57,7 +53,6 @@ namespace Assignment1_hospital_management_system.Utilities
                 CreateFileIfNotExists(ADMINISTRATORS_FILE);
                 CreateFileIfNotExists(APPOINTMENTS_FILE);
                 CreateFileIfNotExists(RECEPTIONISTS_FILE);
-
             }
             catch (Exception ex)
             {
@@ -75,10 +70,8 @@ namespace Assignment1_hospital_management_system.Utilities
             {
                 if (!File.Exists(filePath))
                 {
-                    File.WriteAllText(filePath, ""); 
-
+                    File.WriteAllText(filePath, "");
                 }
-
             }
             catch (Exception ex)
             {
@@ -87,7 +80,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Save patients to file with error handling and logging
+        /// Save patients to file with pipe delimiter
         /// </summary>
         public static void SavePatients(List<Patient> patients)
         {
@@ -96,8 +89,8 @@ namespace Assignment1_hospital_management_system.Utilities
                 List<string> lines = new List<string>();
                 foreach (Patient patient in patients)
                 {
-                    // Format: ID,FirstName,LastName,Email,Phone,Address,Password,MedicalHistory,AssignedDoctorId
-                    string line = $"{patient.Id},{EscapeCommas(patient.FirstName)},{EscapeCommas(patient.LastName)},{EscapeCommas(patient.Email)},{EscapeCommas(patient.Phone)},{EscapeCommas(patient.Address)},{EscapeCommas(patient.Password)},{patient.AssignedDoctorId}";
+                    // Format: ID|FirstName|LastName|Email|Phone|Address|Password|AssignedDoctorId
+                    string line = $"{patient.Id}|{CleanText(patient.FirstName)}|{CleanText(patient.LastName)}|{CleanText(patient.Email)}|{CleanText(patient.Phone)}|{CleanText(patient.Address)}|{CleanText(patient.Password)}|{patient.AssignedDoctorId?.ToString() ?? ""}";
                     lines.Add(line);
                 }
                 File.WriteAllLines(PATIENTS_FILE, lines);
@@ -109,7 +102,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Load patients from file with improved error handling
+        /// Load patients from file with pipe delimiter
         /// </summary>
         public static List<Patient> LoadPatients()
         {
@@ -141,28 +134,28 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Parse patient from file line with improved error handling
+        /// Parse patient from file line with pipe delimiter
         /// </summary>
         private static Patient ParsePatientFromLine(string line)
         {
             try
             {
-                string[] parts = line.Split(',');
-                if (parts.Length >= 9)
+                string[] parts = line.Split('|');
+                if (parts.Length >= 8)
                 {
                     Patient patient = new Patient
                     {
                         Id = int.Parse(parts[0]),
-                        FirstName = UnescapeCommas(parts[1]),
-                        LastName = UnescapeCommas(parts[2]),
-                        Email = UnescapeCommas(parts[3]),
-                        Phone = UnescapeCommas(parts[4]),
-                        Address = UnescapeCommas(parts[5]),
-                        Password = UnescapeCommas(parts[6]),
+                        FirstName = parts[1] ?? "",
+                        LastName = parts[2] ?? "",
+                        Email = parts[3] ?? "",
+                        Phone = parts[4] ?? "",
+                        Address = parts[5] ?? "",
+                        Password = parts[6] ?? ""
                     };
 
-                    // Handle AssignedDoctorId which might be null
-                    if (int.TryParse(parts[8], out int doctorId) && doctorId > 0)
+                    // Handle AssignedDoctorId which might be empty
+                    if (!string.IsNullOrEmpty(parts[7]) && int.TryParse(parts[7], out int doctorId))
                     {
                         patient.AssignedDoctorId = doctorId;
                     }
@@ -178,7 +171,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Save doctors to file with improved formatting
+        /// Save doctors to file with pipe delimiter
         /// </summary>
         public static void SaveDoctors(List<Doctor> doctors)
         {
@@ -189,7 +182,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 {
                     // Format patient IDs as semicolon-separated string
                     string patientIds = string.Join(";", doctor.PatientIds);
-                    string line = $"{doctor.Id},{EscapeCommas(doctor.FirstName)},{EscapeCommas(doctor.LastName)},{EscapeCommas(doctor.Email)},{EscapeCommas(doctor.Phone)},{EscapeCommas(doctor.Address)},{EscapeCommas(doctor.Password)},{EscapeCommas(doctor.Specialization)},{patientIds}";
+                    string line = $"{doctor.Id}|{CleanText(doctor.FirstName)}|{CleanText(doctor.LastName)}|{CleanText(doctor.Email)}|{CleanText(doctor.Phone)}|{CleanText(doctor.Address)}|{CleanText(doctor.Password)}|{CleanText(doctor.Specialization)}|{patientIds}";
                     lines.Add(line);
                 }
                 File.WriteAllLines(DOCTORS_FILE, lines);
@@ -201,7 +194,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Load doctors from file
+        /// Load doctors from file with pipe delimiter
         /// </summary>
         public static List<Doctor> LoadDoctors()
         {
@@ -233,25 +226,25 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Parse doctor from file line with improved error handling
+        /// Parse doctor from file line with pipe delimiter
         /// </summary>
         private static Doctor ParseDoctorFromLine(string line)
         {
             try
             {
-                string[] parts = line.Split(',');
+                string[] parts = line.Split('|');
                 if (parts.Length >= 9)
                 {
                     Doctor doctor = new Doctor
                     {
                         Id = int.Parse(parts[0]),
-                        FirstName = UnescapeCommas(parts[1]),
-                        LastName = UnescapeCommas(parts[2]),
-                        Email = UnescapeCommas(parts[3]),
-                        Phone = UnescapeCommas(parts[4]),
-                        Address = UnescapeCommas(parts[5]),
-                        Password = UnescapeCommas(parts[6]),
-                        Specialization = UnescapeCommas(parts[7])
+                        FirstName = parts[1] ?? "",
+                        LastName = parts[2] ?? "",
+                        Email = parts[3] ?? "",
+                        Phone = parts[4] ?? "",
+                        Address = parts[5] ?? "",
+                        Password = parts[6] ?? "",
+                        Specialization = parts[7] ?? ""
                     };
 
                     // Parse patient IDs if they exist
@@ -269,7 +262,6 @@ namespace Assignment1_hospital_management_system.Utilities
 
                     return doctor;
                 }
-
             }
             catch (Exception ex)
             {
@@ -279,7 +271,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Save administrators to file
+        /// Save administrators to file with pipe delimiter
         /// </summary>
         public static void SaveAdministrators(List<Administrator> administrators)
         {
@@ -288,7 +280,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 List<string> lines = new List<string>();
                 foreach (Administrator admin in administrators)
                 {
-                    string line = $"{admin.Id},{EscapeCommas(admin.FirstName)},{EscapeCommas(admin.LastName)},{EscapeCommas(admin.Email)},{EscapeCommas(admin.Phone)},{EscapeCommas(admin.Address)},{EscapeCommas(admin.Password)}";
+                    string line = $"{admin.Id}|{CleanText(admin.FirstName)}|{CleanText(admin.LastName)}|{CleanText(admin.Email)}|{CleanText(admin.Phone)}|{CleanText(admin.Address)}|{CleanText(admin.Password)}";
                     lines.Add(line);
                 }
                 File.WriteAllLines(ADMINISTRATORS_FILE, lines);
@@ -300,7 +292,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Load administrators from file
+        /// Load administrators from file with pipe delimiter
         /// </summary>
         public static List<Administrator> LoadAdministrators()
         {
@@ -332,24 +324,24 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Parse administrator from file line
+        /// Parse administrator from file line with pipe delimiter
         /// </summary>
         private static Administrator ParseAdministratorFromLine(string line)
         {
             try
             {
-                string[] parts = line.Split(',');
-                if (parts.Length >= 9)
+                string[] parts = line.Split('|');
+                if (parts.Length >= 7)
                 {
                     return new Administrator
                     {
                         Id = int.Parse(parts[0]),
-                        FirstName = UnescapeCommas(parts[1]),
-                        LastName = UnescapeCommas(parts[2]),
-                        Email = UnescapeCommas(parts[3]),
-                        Phone = UnescapeCommas(parts[4]),
-                        Address = UnescapeCommas(parts[5]),
-                        Password = UnescapeCommas(parts[6]),
+                        FirstName = parts[1] ?? "",
+                        LastName = parts[2] ?? "",
+                        Email = parts[3] ?? "",
+                        Phone = parts[4] ?? "",
+                        Address = parts[5] ?? "",
+                        Password = parts[6] ?? ""
                     };
                 }
             }
@@ -361,7 +353,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// save receptionists to file
+        /// Save receptionists to file with pipe delimiter
         /// </summary>
         public static void SaveReceptionists(List<Receptionist> receptionists)
         {
@@ -370,8 +362,7 @@ namespace Assignment1_hospital_management_system.Utilities
                 List<string> lines = new List<string>();
                 foreach (Receptionist receptionist in receptionists)
                 {
-                    // Format: ID,FirstName,LastName,Email,Phone,Address,Password,Department,Shift
-                    string line = $"{receptionist.Id},{EscapeCommas(receptionist.FirstName)},{EscapeCommas(receptionist.LastName)},{EscapeCommas(receptionist.Email)},{EscapeCommas(receptionist.Phone)},{EscapeCommas(receptionist.Address)},{EscapeCommas(receptionist.Password)}";
+                    string line = $"{receptionist.Id}|{CleanText(receptionist.FirstName)}|{CleanText(receptionist.LastName)}|{CleanText(receptionist.Email)}|{CleanText(receptionist.Phone)}|{CleanText(receptionist.Address)}|{CleanText(receptionist.Password)}";
                     lines.Add(line);
                 }
                 File.WriteAllLines(RECEPTIONISTS_FILE, lines);
@@ -383,7 +374,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// load receptionists from file
+        /// Load receptionists from file with pipe delimiter
         /// </summary>
         public static List<Receptionist> LoadReceptionists()
         {
@@ -393,7 +384,6 @@ namespace Assignment1_hospital_management_system.Utilities
                 if (File.Exists(RECEPTIONISTS_FILE))
                 {
                     string[] lines = File.ReadAllLines(RECEPTIONISTS_FILE);
-
 
                     foreach (string line in lines)
                     {
@@ -416,24 +406,24 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// analyze receptionist from file line
+        /// Parse receptionist from file line with pipe delimiter
         /// </summary>
         private static Receptionist ParseReceptionistFromLine(string line)
         {
             try
             {
-                string[] parts = line.Split(',');
-                if (parts.Length >= 9)
+                string[] parts = line.Split('|');
+                if (parts.Length >= 7)
                 {
                     return new Receptionist
                     {
                         Id = int.Parse(parts[0]),
-                        FirstName = UnescapeCommas(parts[1]),
-                        LastName = UnescapeCommas(parts[2]),
-                        Email = UnescapeCommas(parts[3]),
-                        Phone = UnescapeCommas(parts[4]),
-                        Address = UnescapeCommas(parts[5]),
-                        Password = UnescapeCommas(parts[6]),
+                        FirstName = parts[1] ?? "",
+                        LastName = parts[2] ?? "",
+                        Email = parts[3] ?? "",
+                        Phone = parts[4] ?? "",
+                        Address = parts[5] ?? "",
+                        Password = parts[6] ?? ""
                     };
                 }
                 else
@@ -449,7 +439,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Save appointments to file
+        /// Save appointments to file with pipe delimiter
         /// </summary>
         public static void SaveAppointments(List<Appointment> appointments)
         {
@@ -469,7 +459,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Load appointments from file
+        /// Load appointments from file with pipe delimiter
         /// </summary>
         public static List<Appointment> LoadAppointments()
         {
@@ -491,9 +481,7 @@ namespace Assignment1_hospital_management_system.Utilities
                             }
                         }
                     }
-
                 }
-
             }
             catch (Exception ex)
             {
@@ -503,7 +491,7 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Save all data to files with comprehensive logging
+        /// Save all data to files
         /// </summary>
         public static void SaveAllData(List<Patient> patients, List<Doctor> doctors, List<Administrator> administrators, List<Appointment> appointments, List<Receptionist> receptionists)
         {
@@ -517,26 +505,15 @@ namespace Assignment1_hospital_management_system.Utilities
         }
 
         /// <summary>
-        /// Escape commas in text fields to prevent CSV parsing issues
+        /// Clean text to remove any pipe characters that might interfere with parsing
         /// </summary>
-        private static string EscapeCommas(string text)
+        private static string CleanText(string text)
         {
             if (string.IsNullOrEmpty(text))
                 return string.Empty;
 
-            return text.Replace(",", "&#44;"); // Replace commas with HTML entity
+            // Replace pipe characters with dash to prevent parsing issues
+            return text.Replace("|", "-");
         }
-
-        /// <summary>
-        /// Unescape commas in text fields when reading from file
-        /// </summary>
-        private static string UnescapeCommas(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return string.Empty;
-
-            return text.Replace("&#44;", ","); // Replace HTML entity back to commas
-        }
-
     }
 }
