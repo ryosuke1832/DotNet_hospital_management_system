@@ -4,7 +4,6 @@ namespace Assignment1_hospital_management_system.Utilities
 {
     /// <summary>
     /// FileManager class - handles all file operations with Data folder structure
-    /// パイプ区切り（|）形式を使用してCSVの問題を解決
     /// </summary>
     public static class FileManager
     {
